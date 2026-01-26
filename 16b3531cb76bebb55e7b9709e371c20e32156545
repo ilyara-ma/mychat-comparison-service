@@ -1,0 +1,190 @@
+src/modules/comparison-engine/comparison-engine.ts
+  35b723d 1-121,123-183,185-193,195-201
+  human 122,194
+package.json
+  35b723d 5,9-15,20,37-45,53-55
+src/modules/metrics-alerting/metrics-emitter.ts
+  35b723d 1-86,89-111,113-136,138-146,150-158
+  human 87-88,112,147
+src/utils/message-normalizer.ts
+  35b723d 1-125
+src/modules/team-discovery/team-cache.ts
+  35b723d 1-36
+test/services/dual-realtime-communicator.test.ts
+  35b723d 1-191
+src/modules/team-discovery/team-discovery-service.ts
+  35b723d 1-132
+integration-test/comparison-flow.test.ts
+  35b723d 1-63
+test/utils/message-normalizer.test.ts
+  35b723d 1-314
+.eslintrc.json
+  35b723d 3-5,11-13,15-16,18-23
+src/modules/team-discovery/team-scanner.ts
+  35b723d 1-45
+.eslintignore
+  35b723d 1-7
+test/modules/message-matcher/fuzzy-matcher.test.ts
+  35b723d 1-215
+src/utils/content-hasher.ts
+  35b723d 1-44
+src/modules/metrics-alerting/alert-manager.ts
+  35b723d 1-90,95,97-99,103-139
+  human 91-94,96,100-102
+src/modules/comparison-engine/metrics-calculator.ts
+  35b723d 1-94,96-115
+src/modules/comparison-engine/content-comparator.ts
+  35b723d 1-136
+src/modules/message-fetcher/batch-processor.ts
+  35b723d 1-72
+src/modules/message-fetcher/message-fetcher-service.ts
+  35b723d 1-141
+src/modules/message-matcher/fuzzy-matcher.ts
+  35b723d 1-65
+src/services/dual-realtime-communicator.ts
+  35b723d 1-145
+src/modules/team-discovery/types.ts
+  35b723d 1-8
+src/modules/comparison-engine/types.ts
+  human 28
+  35b723d 1-27,29-82
+src/services/types.ts
+  35b723d 1-47
+test/utils/content-hasher.test.ts
+  35b723d 1-75
+src/modules/metrics-alerting/logger-formatter.ts
+  35b723d 1-36,38-94
+  human 37
+src/modules/message-matcher/message-matcher.ts
+  41ee76f 56,59-60,70-73,98,105-107
+  35b723d 1-55,57-58,61-69,74-97,99-104,108-113
+tsconfig.json
+  35b723d 1-25
+src/modules/comparison-engine/ordering-validator.ts
+  35b723d 1-74
+src/services/comparison-scheduler.ts
+  human 181,185,191,196
+  35b723d 1-180,183-184,186-190,193-195,200-302
+src/app.ts
+  35b723d 1-20
+src/types/index.ts
+  35b723d 1-108
+src/modules/message-matcher/types.ts
+  41ee76f 12,14-15,22,24-25
+  35b723d 1-11,13,16-21,23,26-58
+src/modules/metrics-alerting/types.ts
+  35b723d 1-7,9-39
+  human 8
+test/modules/comparison-engine/content-comparator.test.ts
+  35b723d 1-107
+Dockerfile
+  35b723d 1,6-16,19-20,33
+src/modules/message-fetcher/types.ts
+  35b723d 1-19
+src/service-descriptor.ts
+  35b723d 1-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.22",
+  "base_commit_sha": "16b3531cb76bebb55e7b9709e371c20e32156545",
+  "prompts": {
+    "35b723d": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "ce22b29f-06bf-424c-8569-b514e603b361",
+        "model": "claude-4.5-sonnet-thinking"
+      },
+      "human_author": "ilyara-ma <ilya.ra@moonactive.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "lets convert to typescript",
+          "timestamp": "2026-01-26T19:17:13.926Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I'll help you convert the project to TypeScript. First, let me read the initialization instructions as required.",
+          "timestamp": "2026-01-26T19:17:21.664Z"
+        },
+        {
+          "type": "assistant",
+          "text": "No instructions directory found. Now I'll convert the project to TypeScript.",
+          "timestamp": "2026-01-26T19:17:37.128Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I'll convert the project to TypeScript. Let me start by setting up the TypeScript configuration and updating dependencies.",
+          "timestamp": "2026-01-26T19:17:41.867Z"
+        }
+      ],
+      "total_additions": 4663,
+      "total_deletions": 902,
+      "accepted_lines": 3578,
+      "overriden_lines": 21
+    },
+    "41ee76f": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "be9f59dc-8dd4-4395-8c25-98154c0a79d2",
+        "model": "composer-1"
+      },
+      "human_author": "ilyara-ma <ilya.ra@moonactive.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "explain @src/modules/message-matcher/fuzzy-matcher.js  logic, is it correct ? it shall be invoked iff   messageID (pubnubTimetoken) is not exist",
+          "timestamp": "2026-01-26T19:46:57.606Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Reviewing the fuzzy matcher logic and its usage context.",
+          "timestamp": "2026-01-26T19:47:14.035Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Reviewing the message-matcher implementation to understand the invocation context:",
+          "timestamp": "2026-01-26T19:47:19.304Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Checking tests to understand expected behavior:",
+          "timestamp": "2026-01-26T19:47:22.038Z"
+        },
+        {
+          "type": "assistant",
+          "text": "## Analysis of FuzzyMatcher Logic\n\n### Current Logic Flow\n\n**FuzzyMatcher (`fuzzy-matcher.js`):**\n1. Extracts content and timestamp from the chat message\n2. Hashes the chat message content\n3. Iterates through all PubNub messages\n4. For each PubNub message:\n   - Hashes its content\n   - Extracts timestamp from `timetoken` (divides by 10000 to convert to milliseconds)\n   - Matches if both hash and time match (within 5 second tolerance)\n5. Returns the first matching PubNub message or `null`\n\n### Issues Found\n\n1. Bug in JS version (`message-matcher.js` line 51): Fuzzy matcher is called even when a timetoken exists but doesn't match. The TS version is correct (line 69: `if (!wasMatched)`).\n\n2. Missing filter: Fuzzy matcher receives all `pubnubMessages`, including ones already matched by timetoken. This can cause:\n   - A PubNub message to match multiple chat messages\n   - Incorrect results\n\n3. Invocation condition: Should only run when:\n   - The chat message has no `pubnubTimetoken` (messageID), OR\n   - The `pubnubTimetoken` exists but no matching PubNub message is found\n\n### Correct Behavior\n\nThe TS version correctly invokes fuzzy matching only when `!wasMatched` (line 69), which covers:\n- No timetoken extracted (`timetoken` is `null`)\n- Timetoken exists but no matching PubNub message found\n\nHowever, the fuzzy matcher should exclude already-matched PubNub messages to prevent duplicate matches.\n\nShould I fix the JS version and add filtering for already-matched messages in the fuzzy matcher?",
+          "timestamp": "2026-01-26T19:47:24.537Z"
+        },
+        {
+          "type": "user",
+          "text": "whats JS version? here is only TS version",
+          "timestamp": "2026-01-26T19:48:10.627Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Focusing on the TS version. Checking which files are actually in use:",
+          "timestamp": "2026-01-26T19:48:19.803Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "glob_file_search",
+          "input": {
+            "globPattern": "**/message-matcher/*.ts"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "glob_file_search",
+          "input": {
+            "globPattern": "**/message-matcher/*.js"
+          }
+        }
+      ],
+      "total_additions": 55,
+      "total_deletions": 6,
+      "accepted_lines": 17,
+      "overriden_lines": 0
+    }
+  }
+}
