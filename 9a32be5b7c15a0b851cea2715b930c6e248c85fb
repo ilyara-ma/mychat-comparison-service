@@ -1,0 +1,33 @@
+src/routes/comparison-route.ts
+  5caa6f9 1-93
+test/routes/comparison-route.test.ts
+  5caa6f9 1-225
+src/services/comparison-scheduler.ts
+  35b723d 130-131
+  5caa6f9 133-138
+src/service-descriptor.ts
+  35b723d 64,70
+  5caa6f9 8,56-59,65-69
+src/services/types.ts
+  5caa6f9 47-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.22",
+  "base_commit_sha": "9a32be5b7c15a0b851cea2715b930c6e248c85fb",
+  "prompts": {
+    "5caa6f9": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "d0386204-7b18-436f-bebe-dce04731316f",
+        "model": "unknown"
+      },
+      "human_author": "ilyara-ma <ilya.ra@moonactive.com>",
+      "messages": [],
+      "total_additions": 392,
+      "total_deletions": 190,
+      "accepted_lines": 338,
+      "overriden_lines": 0
+    }
+  }
+}
