@@ -1,0 +1,41 @@
+src/routes/comparison-route.ts
+  c824dd9 2,41,45,49
+src/service-descriptor.ts
+  35b723d 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.22",
+  "base_commit_sha": "5e1f51b6925384b8038fe7b2f42e5fbb2362d3e9",
+  "prompts": {
+    "c824dd9": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a9900e95-63f6-45b2-a22b-5b41e3e10482",
+        "model": "composer-1"
+      },
+      "human_author": "ilyara-ma <ilya.ra@moonactive.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "fix linter errors",
+          "timestamp": "2026-01-26T20:17:41.527Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Checking linter errors.",
+          "timestamp": "2026-01-26T20:17:43.689Z"
+        },
+        {
+          "type": "assistant",
+          "text": "No linter errors found. Checking package.json for lint scripts and running the linter to verify:",
+          "timestamp": "2026-01-26T20:17:44.537Z"
+        }
+      ],
+      "total_additions": 13,
+      "total_deletions": 10,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  }
+}
