@@ -1,5 +1,5 @@
-import { ModuleParams } from '../types';
 import { IComparisonScheduler, ITeamDiscoveryService } from '../services/types';
+import { ModuleParams } from '../types';
 
 type Request = {
   body?: {
@@ -38,12 +38,15 @@ class ComparisonRoute {
   }
 
   public async postInit(): Promise<void> {
+    await Promise.resolve();
   }
 
   public async deepHealth(): Promise<void> {
+    await Promise.resolve();
   }
 
   public async destroy(): Promise<void> {
+    await Promise.resolve();
   }
 
   public async runComparison(req: Request, res: Response): Promise<void> {

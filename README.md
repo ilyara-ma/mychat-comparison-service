@@ -178,6 +178,12 @@ classDiagram
         +logComparisonResult()
     }
     
+    class ComparisonRoute {
+        -comparisonScheduler: IComparisonScheduler
+        -teamDiscoveryService: ITeamDiscoveryService
+        +runComparison()
+    }
+    
     Application --> ComparisonScheduler
     ComparisonScheduler --> TeamDiscoveryService
     ComparisonScheduler --> MessageFetcherService
@@ -200,6 +206,9 @@ classDiagram
     
     MetricsEmitter --> AlertManager
     MetricsEmitter --> LoggerFormatter
+    
+    ComparisonRoute --> ComparisonScheduler
+    ComparisonRoute --> TeamDiscoveryService
 ```
 
 ## Key Features
@@ -209,6 +218,48 @@ classDiagram
 - **Comprehensive Validation**: Compares all dimensions (count, content, ordering, coverage, latency)
 - **Configurable Scope**: Supports manual team selection or automatic discovery
 - **Threshold-Based Alerting**: Emits metrics and triggers alerts on discrepancies
+- **On-Demand API**: REST API endpoint for manual comparison runs
+
+## API Endpoints
+
+### POST `/api/v1/comparison/run`
+
+Triggers an on-demand comparison for specified teams or all cached teams.
+
+**Request Body (optional):**
+```json
+{
+  "teamIds": ["team-id-1", "team-id-2"]
+}
+```
+
+**Query Parameters (optional):**
+- `teamIds`: Comma-separated string of team IDs (e.g., `?teamIds=team-id-1,team-id-2`) or array
+
+**Response:**
+```json
+{
+  "success": true,
+  "teamCount": 2,
+  "comparisonCount": 2,
+  "results": [
+    {
+      "teamId": "team-id-1",
+      "channelId": "channel-id-1",
+      "metrics": { ... }
+    }
+  ]
+}
+```
+
+**Example:**
+```bash
+curl -X POST http://localhost:3000/api/v1/comparison/run \
+  -H "Content-Type: application/json" \
+  -d '{"teamIds": ["team-id-1", "team-id-2"]}'
+```
+
+If no `teamIds` are provided, the comparison runs for all cached teams.
 
 ## Configuration
 
@@ -248,6 +299,10 @@ The service emits the following metrics:
 - `chat_comparison.latency_diff_ms` - Latency difference between systems
 - `chat_comparison.chat_missing_messages` - Messages in PubNub but not Chat
 - `chat_comparison.pubnub_missing_messages` - Messages in Chat but not PubNub (CRITICAL)
+- `chat_comparison.comparison_run_duration_ms` - Duration of scheduled comparison runs
+- `chat_comparison.scheduled_comparison_failures` - Count of failed scheduled comparisons
+- `chat_comparison.scheduled_team_discovery_failures` - Count of failed team discovery runs
+- `chat_comparison.comparison_failures` - Count of individual team comparison failures
 
 ## Running Locally
 
