@@ -23,7 +23,6 @@ export interface IRealtimeCommunicationsService {
 export interface ITeamDiscoveryService {
   refreshTeams: () => Promise<void>;
   getCachedTeams: () => Array<{ teamId: string; channelId: string }>;
-  getCacheInfo: () => { teamCount: number; lastUpdate: number | null };
 }
 
 export interface IMessageFetcherService {
@@ -44,4 +43,8 @@ export interface IComparisonEngine {
 export interface IMetricsEmitter {
   emitComparisonMetrics: (comparisonResult: unknown) => void;
   emitBatchSummary: (comparisonResults: unknown[]) => void;
+}
+
+export interface IComparisonScheduler {
+  runManualComparison: (teamIds?: string[]) => Promise<unknown[]>;
 }

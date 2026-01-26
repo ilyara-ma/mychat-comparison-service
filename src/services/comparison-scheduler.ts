@@ -127,11 +127,15 @@ class ComparisonScheduler {
     this.logger.info('Comparison Scheduler stopped');
   }
 
-  public async runManualComparison(teamIds: string[]): Promise<unknown[]> {
-    this.logger.info('Running manual comparison', { teamIds });
+  public async runManualComparison(teamIds?: string[]): Promise<unknown[]> {
+    let teams = this.teamDiscoveryService!.getCachedTeams();
 
-    const teams = this.teamDiscoveryService!.getCachedTeams()
-      .filter((team) => teamIds.includes(team.teamId));
+    if (teamIds && teamIds.length > 0) {
+      teams = teams.filter((team) => teamIds.includes(team.teamId));
+      this.logger.info('Running manual comparison for specified teams', { teamIds, teamCount: teams.length });
+    } else {
+      this.logger.info('Running manual comparison for all cached teams', { teamCount: teams.length });
+    }
 
     if (teams.length === 0) {
       throw new Error('No teams found for manual comparison');
@@ -153,14 +157,6 @@ class ComparisonScheduler {
     }
 
     return comparisonResults;
-  }
-
-  public getStatus(): Record<string, unknown> {
-    return {
-      isRunning: this.isRunning,
-      config: this.schedulerConfig,
-      teamCache: this.teamDiscoveryService!.getCacheInfo(),
-    };
   }
 
   private async _loadSchedulerConfig(): Promise<void> {

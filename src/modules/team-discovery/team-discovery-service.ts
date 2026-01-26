@@ -92,13 +92,6 @@ class TeamDiscoveryService {
     return this.teamCache.getTeams();
   }
 
-  public getCacheInfo(): { teamCount: number; lastUpdate: number | null } {
-    return {
-      teamCount: this.teamCache.size(),
-      lastUpdate: this.teamCache.getLastUpdate(),
-    };
-  }
-
   private async _discoverTeams(): Promise<Team[]> {
     const manualTeamIds = await this._getManualTeamIds();
 

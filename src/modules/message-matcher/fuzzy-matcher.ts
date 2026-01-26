@@ -56,10 +56,6 @@ class FuzzyMatcher {
 
     return null;
   }
-
-  public setTimeTolerance(toleranceMs: number): void {
-    this.timeToleranceMs = toleranceMs;
-  }
 }
 
 export default FuzzyMatcher;

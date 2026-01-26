@@ -19,15 +19,6 @@ class TeamCache {
     return this.teams;
   }
 
-  public getLastUpdate(): number | null {
-    return this.lastUpdate;
-  }
-
-  public clear(): void {
-    this.teams = [];
-    this.lastUpdate = null;
-  }
-
   public size(): number {
     return this.teams.length;
   }

@@ -78,17 +78,6 @@ class MetricsCalculator {
     return Math.abs(pubnubCount - chatServiceCount);
   }
 
-  public calculateDiscrepancyPercentage(pubnubCount: number, chatServiceCount: number): number {
-    if (pubnubCount === 0 && chatServiceCount === 0) {
-      return 0;
-    }
-
-    const maxCount = Math.max(pubnubCount, chatServiceCount);
-    const diff = Math.abs(pubnubCount - chatServiceCount);
-
-    return (diff / maxCount) * 100;
-  }
-
   private _extractTimestamp(message: unknown): number | null {
     if (!message) {
       return null;

@@ -5,6 +5,7 @@ import MetricsEmitter from './modules/metrics-alerting/metrics-emitter';
 import TeamDiscoveryService from './modules/team-discovery/team-discovery-service';
 import ComparisonScheduler from './services/comparison-scheduler';
 import DualRealtimeCommunicator from './services/dual-realtime-communicator';
+import ComparisonRoute from './routes/comparison-route';
 
 export = {
   modulesDescriptor: [
@@ -52,10 +53,20 @@ export = {
       module: ComparisonScheduler,
       name: 'comparisonScheduler',
     },
+    {
+      module: ComparisonRoute,
+      name: 'comparisonRoute',
+    },
   ],
   serverDescriptor: {
     module: '@moonactive/moonactive-server',
     name: 'server',
-    routes: [],
+    routes: [
+      {
+        path: '/api/v1/comparison/run',
+        method: 'post',
+        handler: 'comparisonRoute.runComparison',
+      },
+    ],
   },
 };

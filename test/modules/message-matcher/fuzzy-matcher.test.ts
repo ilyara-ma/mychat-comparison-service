@@ -176,40 +176,4 @@ describe('FuzzyMatcher', () => {
       expect(result).to.not.be.null;
     });
   });
-
-  describe('setTimeTolerance', () => {
-    it('should update time tolerance', () => {
-      fuzzyMatcher.setTimeTolerance(10000);
-
-      const chatMsg = {
-        id: '1',
-        content: { text: 'hello' },
-        createdAt: 1234500,
-      };
-      const pubnubMessages = [
-        { timetoken: '12355000000', message: { text: 'hello' } },
-      ];
-
-      const result = fuzzyMatcher.findMatch(chatMsg, pubnubMessages);
-
-      expect(result).to.not.be.null;
-    });
-
-    it('should reject matches outside new tolerance', () => {
-      fuzzyMatcher.setTimeTolerance(1000);
-
-      const chatMsg = {
-        id: '1',
-        content: { text: 'hello' },
-        createdAt: 1234500,
-      };
-      const pubnubMessages = [
-        { timetoken: '12356000000', message: { text: 'hello' } },
-      ];
-
-      const result = fuzzyMatcher.findMatch(chatMsg, pubnubMessages);
-
-      expect(result).to.be.null;
-    });
-  });
 });

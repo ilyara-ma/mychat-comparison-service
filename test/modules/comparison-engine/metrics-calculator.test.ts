@@ -172,29 +172,4 @@ describe('MetricsCalculator', () => {
     });
   });
 
-  describe('calculateDiscrepancyPercentage', () => {
-    it('should return 0 when both counts are 0', () => {
-      const result = metricsCalculator.calculateDiscrepancyPercentage(0, 0);
-
-      expect(result).to.equal(0);
-    });
-
-    it('should calculate percentage correctly', () => {
-      const result = metricsCalculator.calculateDiscrepancyPercentage(100, 80);
-
-      expect(result).to.equal(20);
-    });
-
-    it('should handle reverse order', () => {
-      const result = metricsCalculator.calculateDiscrepancyPercentage(80, 100);
-
-      expect(result).to.equal(20);
-    });
-
-    it('should return 0 for equal counts', () => {
-      const result = metricsCalculator.calculateDiscrepancyPercentage(100, 100);
-
-      expect(result).to.equal(0);
-    });
-  });
 });

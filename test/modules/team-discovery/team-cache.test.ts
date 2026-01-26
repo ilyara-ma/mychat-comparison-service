@@ -10,7 +10,7 @@ describe('TeamCache', () => {
   });
 
   describe('setTeams', () => {
-    it('should set teams and update timestamp', () => {
+    it('should set teams', () => {
       const teams: Team[] = [
         { teamId: '1', channelId: 'ch1' },
         { teamId: '2', channelId: 'ch2' },
@@ -19,7 +19,6 @@ describe('TeamCache', () => {
       teamCache.setTeams(teams);
 
       expect(teamCache.getTeams()).to.deep.equal(teams);
-      expect(teamCache.getLastUpdate()).to.not.be.null;
     });
 
     it('should update existing teams', () => {
@@ -27,13 +26,9 @@ describe('TeamCache', () => {
       const teams2: Team[] = [{ teamId: '2', channelId: 'ch2' }];
 
       teamCache.setTeams(teams1);
-      const timestamp1 = teamCache.getLastUpdate();
+      teamCache.setTeams(teams2);
 
-      setTimeout(() => {
-        teamCache.setTeams(teams2);
-        expect(teamCache.getTeams()).to.deep.equal(teams2);
-        expect(teamCache.getLastUpdate()).to.be.greaterThan(timestamp1!);
-      }, 10);
+      expect(teamCache.getTeams()).to.deep.equal(teams2);
     });
   });
 
@@ -54,32 +49,6 @@ describe('TeamCache', () => {
     });
   });
 
-  describe('getLastUpdate', () => {
-    it('should return null initially', () => {
-      expect(teamCache.getLastUpdate()).to.be.null;
-    });
-
-    it('should return timestamp after setting teams', () => {
-      const teams: Team[] = [{ teamId: '1', channelId: 'ch1' }];
-
-      teamCache.setTeams(teams);
-
-      expect(teamCache.getLastUpdate()).to.not.be.null;
-      expect(teamCache.getLastUpdate()).to.be.a('number');
-    });
-  });
-
-  describe('clear', () => {
-    it('should clear teams and timestamp', () => {
-      const teams: Team[] = [{ teamId: '1', channelId: 'ch1' }];
-
-      teamCache.setTeams(teams);
-      teamCache.clear();
-
-      expect(teamCache.getTeams()).to.be.an('array').that.is.empty;
-      expect(teamCache.getLastUpdate()).to.be.null;
-    });
-  });
 
   describe('size', () => {
     it('should return 0 initially', () => {
