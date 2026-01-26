@@ -1,0 +1,100 @@
+{
+  "server": {
+    "port": 3000,
+    "host": "http://localhost",
+    "readyRoute": "api/v1/ready"
+  },
+  "loggerManager": {
+    "env": "development",
+    "pino": {
+      "level": "info"
+    }
+  },
+  "secretManager": {
+    "region": "us-east-1",
+    "useDefaultValue": false,
+    "buckets": {}
+  },
+  "alerts": {
+    "prefix": "coinmaster.chat-comparison.service",
+    "defaultVendors": [
+      "newRelic"
+    ],
+    "cron": "0 * * * * *",
+    "serverMetrics": {
+      "serverMetricsEndpoint": "internal-api/v1/metrics/newrelic",
+      "eventsAPIEndpoint": "v1/accounts/2739055/events"
+    },
+    "dimensions": [
+      {
+        "name": "host",
+        "type": "host"
+      },
+      {
+        "name": "environment",
+        "type": "environment"
+      },
+      {
+        "name": "k8s-cluster-name",
+        "type": "k8s-cluster-name"
+      }
+    ]
+  },
+  "featureConfig": {
+    "featureConfigMode": "on",
+    "connectors": [
+      "launch-darkly/relay-proxy-connector",
+      "launch-darkly/external-endpoint-connector"
+    ],
+    "fallbackConnectors": [
+      "launch-darkly/local-file-connector"
+    ],
+    "localFilePaths": [
+      "./src/config/feature-flags.json"
+    ]
+  },
+  "realtimeCommunications": {
+    "pubnub": {
+      "publishKey": "pub-c-xxx",
+      "subscribeKey": "sub-c-xxx",
+      "origin": "ps.pndsn.com",
+      "retryCount": 2,
+      "minMillisRetryDelay": 100,
+      "maxMillisRetryDelay": 1000
+    },
+    "chatService": {
+      "baseUrl": "http://localhost:8080",
+      "requestTimeout": 5000,
+      "retryLimit": 2,
+      "minMillisRetryDelay": 100,
+      "maxMillisRetryDelay": 1000
+    }
+  },
+  "teamsDAL": {
+    "provider": "mysql",
+    "mysql": {
+      "host": "localhost",
+      "port": 3306,
+      "database": "teams",
+      "connectionLimit": 10
+    }
+  },
+  "comparisonScheduler": {
+    "enabled": true,
+    "teamDiscoveryIntervalMinutes": 30,
+    "pollingIntervalMinutes": 15,
+    "pollingTimeWindowMinutes": 20,
+    "batchSize": 50,
+    "maxMessagesPerFetch": 100,
+    "teamIdsOverride": []
+  },
+  "comparisonThresholds": {
+    "messageCountDiscrepancyPercent": 5,
+    "messageCountDiscrepancyAbsolute": 10,
+    "contentMismatchRatePercent": 1,
+    "orderingViolationsCount": 0,
+    "coveragePercentageMin": 90,
+    "latencyDiffMsMax": 5000,
+    "apiFailureRatePercent": 5
+  }
+}

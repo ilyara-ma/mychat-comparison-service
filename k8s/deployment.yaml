@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-comparison-tool
+  namespace: coinmaster
+  labels:
+    app: chat-comparison-tool
+    team: teams
+    environment: staging
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chat-comparison-tool
+  template:
+    metadata:
+      labels:
+        app: chat-comparison-tool
+        team: teams
+        environment: staging
+    spec:
+      serviceAccountName: chat-comparison-tool
+      containers:
+      - name: chat-comparison-tool
+        image: moonactive/chat-comparison-tool:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+        env:
+        - name: PORT
+          value: "3000"
+        - name: NODE_ENV
+          value: "production"
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: CHAT_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: chat-comparison-config
+              key: chat_service_url
+        - name: TEAMS_DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: teams-db-credentials
+              key: host
+        - name: TEAMS_DB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: teams-db-credentials
+              key: port
+        - name: TEAMS_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: teams-db-credentials
+              key: database
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/v1/ready
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/v1/ready
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-comparison-tool
+  namespace: coinmaster
+  labels:
+    app: chat-comparison-tool
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: chat-comparison-tool
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: chat-comparison-tool
+  namespace: coinmaster
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/chat-comparison-tool-role
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chat-comparison-config
+  namespace: coinmaster
+data:
+  chat_service_url: "http://ins-chat-service.coinmaster.svc.cluster.local:8080"
+  polling_interval_minutes: "15"
+  team_discovery_interval_minutes: "30"
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: chat-comparison-tool-pdb
+  namespace: coinmaster
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: chat-comparison-tool

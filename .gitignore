@@ -1,0 +1,13 @@
+node_modules/
+coverage/
+.nyc_output/
+mochawesome-report/
+.DS_Store
+.env
+.idea/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.vscode/
+dist/

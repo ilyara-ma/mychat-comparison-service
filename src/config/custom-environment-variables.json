@@ -1,0 +1,20 @@
+{
+  "server": {
+    "port": "PORT"
+  },
+  "secretManager": {
+    "region": "AWS_REGION"
+  },
+  "realtimeCommunications": {
+    "chatService": {
+      "baseUrl": "CHAT_SERVICE_URL"
+    }
+  },
+  "teamsDAL": {
+    "mysql": {
+      "host": "TEAMS_DB_HOST",
+      "port": "TEAMS_DB_PORT",
+      "database": "TEAMS_DB_NAME"
+    }
+  }
+}

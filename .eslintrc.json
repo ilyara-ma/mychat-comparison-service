@@ -1,0 +1,25 @@
+{
+  "extends": "@moonactive/eslint-config-ma-cm",
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "env": {
+    "node": true,
+    "es6": true,
+    "mocha": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "ignorePatterns": ["dist/", "node_modules/", "coverage/", "*.d.ts", "*.js.map", "test/", "integration-test/"],
+  "rules": {
+    "no-console": "warn",
+    "max-len": ["error", { "code": 150 }],
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "global-require": "off",
+    "no-await-in-loop": "off"
+  }
+}
