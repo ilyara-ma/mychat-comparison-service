@@ -26,6 +26,7 @@ class DualRealtimeCommunicator {
 
   public async init(): Promise<void> {
     const RealtimeCommunicationsService = require('@moonactive/moonactive-realtime-communications');
+
     const rtcConfig = (this.config.rtcService as Record<string, unknown>) || {};
     const rollout = (rtcConfig.rollout as Record<string, Record<string, unknown>>) || {};
     const pubnubConfig = rollout.pubnub || (rtcConfig.pubnub as Record<string, unknown>) || {};

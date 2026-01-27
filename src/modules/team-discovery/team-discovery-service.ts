@@ -3,6 +3,10 @@ import {
 } from '../../types';
 import { ITeamsDAL } from './types';
 
+function getTeamsDAL(): new (params: { services: ModuleParams['services']; config: Record<string, unknown> }) => ITeamsDAL {
+  return require('@moonactive/teams-dal');
+}
+
 class TeamDiscoveryService {
   private config: Record<string, unknown>;
 
@@ -10,31 +14,40 @@ class TeamDiscoveryService {
 
   private alerts: IAlerts;
 
-  private teamsDAL: ITeamsDAL;
+  private teamsDAL: ITeamsDAL | null;
 
   private batchSize: number;
+
+  private services: ModuleParams['services'];
 
   constructor(params: ModuleParams) {
     const { services, config } = params;
     this.config = config || {};
+    this.services = services;
     this.logger = services.loggerManager.getLogger('team-discovery');
     this.alerts = services.alerts;
+    this.teamsDAL = null;
 
-    const TeamsDAL = require('@moonactive/teams-dal');
-    this.teamsDAL = new TeamsDAL({
-      services,
-      config: (this.config.teamsDAL as Record<string, unknown>) || {},
-    }) as ITeamsDAL;
-
-    const schedulerConfig = (this.config.comparisonScheduler as Record<string, unknown>)?.comparisonScheduler as Record<string, unknown> || {};
-    this.batchSize = (schedulerConfig.batchSize as number) || 50;
+    const teamDiscoveryConfig = (this.config.teamDiscovery as Record<string, unknown>) || {};
+    this.batchSize = (teamDiscoveryConfig.batchSize as number) || 50;
   }
 
   public async initialize(): Promise<void> {
+    if (!this.teamsDAL) {
+      const TeamsDAL = getTeamsDAL();
+      const teamsDALConfig = (this.config.teamsDAL as Record<string, unknown>) || {};
+      this.teamsDAL = new TeamsDAL({
+        services: this.services,
+        config: teamsDALConfig,
+      }) as ITeamsDAL;
+    }
     await this.teamsDAL.init();
   }
 
   public async getTeamsBatch(): Promise<string[]> {
+    if (!this.teamsDAL) {
+      throw new Error('TeamDiscoveryService not initialized. Call initialize() first.');
+    }
     try {
       const result = await this.teamsDAL.getTeamsData({ limit: this.batchSize });
 

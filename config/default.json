@@ -120,26 +120,44 @@
       "connectionLimit": 10
     }
   },
-  "teamsDAL": {
-    "clientName": "teamsRdsClient",
-    "provider": "mysql"
-  },
-  "teamsDAL": {
-    "clientName": "teamsRdsClient",
-    "provider": "mysql"
-  },
   "comparisonScheduler": {
-    "comparisonScheduler": {
-      "enabled": true,
-      "pollingIntervalMinutes": 15,
-      "pollingTimeWindowMinutes": 20,
+    "enabled": false,
+    "pollingIntervalMinutes": 15,
+    "pollingTimeWindowMinutes": 20,
+    "batchSize": 50,
+    "maxMessagesPerFetch": 100,
+    "channelPrefixes": [
+      "team_",
+      "lobby_",
+      "chat_"
+    ],
+    "teamDiscovery": {
       "batchSize": 50,
-      "maxMessagesPerFetch": 100,
-      "channelPrefixes": [
-        "team_",
-        "lobby_",
-        "chat_"
-      ]
+      "teamsDAL": {
+        "clientName": "teamsRdsClient",
+        "provider": "mysql"
+      }
+    },
+    "dualRealtimeCommunicator": {
+      "rtcService": {
+        "provider": "chatService",
+        "rollout": {
+          "pubnub": {
+            "origin": "moonactive.pubnubapi.com",
+            "retryCount": 2,
+            "minMillisRetryDelay": 100,
+            "maxMillisRetryDelay": 1000
+          },
+          "chatService": {
+            "baseUrl": "http://ci-gs-od-chat1-chat.cm-ci.eks.int",
+            "requestTimeout": 30000,
+            "retryLimit": 3,
+            "retryCount": 2,
+            "minMillisRetryDelay": 100,
+            "maxMillisRetryDelay": 300
+          }
+        }
+      }
     },
     "comparisonThresholds": {
       "messageCountDiscrepancyPercent": 5,
@@ -149,37 +167,16 @@
       "coveragePercentageMin": 90,
       "latencyDiffMsMax": 5000,
       "apiFailureRatePercent": 5
-    }
-  },
-  "metricsEmitter": {
-    "comparisonThresholds": {
-      "messageCountDiscrepancyPercent": 5,
-      "messageCountDiscrepancyAbsolute": 10,
-      "contentMismatchRatePercent": 1,
-      "orderingViolationsCount": 0,
-      "coveragePercentageMin": 90,
-      "latencyDiffMsMax": 5000,
-      "apiFailureRatePercent": 5
-    }
-  },
-  "dualRealtimeCommunicator": {
-    "rtcService": {
-      "provider": "chatService",
-      "rollout": {
-        "pubnub": {
-          "origin": "moonactive.pubnubapi.com",
-          "retryCount": 2,
-          "minMillisRetryDelay": 100,
-          "maxMillisRetryDelay": 1000
-        },
-        "chatService": {
-          "baseUrl": "http://ci-gs-od-chat1-chat.cm-ci.eks.int",
-          "requestTimeout": 30000,
-          "retryLimit": 3,
-          "retryCount": 2,
-          "minMillisRetryDelay": 100,
-          "maxMillisRetryDelay": 300
-        }
+    },
+    "metricsEmitter": {
+      "comparisonThresholds": {
+        "messageCountDiscrepancyPercent": 5,
+        "messageCountDiscrepancyAbsolute": 10,
+        "contentMismatchRatePercent": 1,
+        "orderingViolationsCount": 0,
+        "coveragePercentageMin": 90,
+        "latencyDiffMsMax": 5000,
+        "apiFailureRatePercent": 5
       }
     }
   }

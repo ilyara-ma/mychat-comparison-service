@@ -11,7 +11,7 @@ describe('TeamDiscoveryService', () => {
   let services: ModuleParams['services'];
   let teamsDAL: ITeamsDAL;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     logger = {
       info: sinon.stub(),
       error: sinon.stub(),
@@ -39,6 +39,9 @@ describe('TeamDiscoveryService', () => {
       featureConfig: {
         client: {} as any,
       },
+      get: sinon.stub().returns({
+        query: sinon.stub(),
+      }),
     } as any;
 
     const Module = require('module');
@@ -55,14 +58,14 @@ describe('TeamDiscoveryService', () => {
     teamDiscoveryService = new TeamDiscoveryService({
       services,
       config: {
-        comparisonScheduler: {
-          comparisonScheduler: {
-            batchSize: 10,
-          },
+        teamDiscovery: {
+          batchSize: 10,
         },
       },
     });
 
+    await teamDiscoveryService.initialize();
+    
     Module.prototype.require = originalRequire;
   });
 
@@ -72,9 +75,33 @@ describe('TeamDiscoveryService', () => {
 
   describe('initialize', () => {
     it('should initialize teams DAL', async () => {
-      await teamDiscoveryService.initialize();
+      const testTeamsDAL = {
+        init: sinon.stub().resolves(),
+        destroy: sinon.stub().resolves(),
+        getTeamsData: sinon.stub(),
+      };
 
-      expect((teamsDAL.init as sinon.SinonStub).calledOnce).to.be.true;
+      const Module = require('module');
+      const originalRequire = Module.prototype.require;
+      Module.prototype.require = function (id: string) {
+        if (id === '@moonactive/teams-dal') {
+          return function () {
+            return testTeamsDAL;
+          };
+        }
+        return originalRequire.apply(this, arguments);
+      };
+
+      const service = new TeamDiscoveryService({
+        services,
+        config: {},
+      });
+
+      await service.initialize();
+
+      Module.prototype.require = originalRequire;
+
+      expect((testTeamsDAL.init as sinon.SinonStub).calledOnce).to.be.true;
     });
   });
 

@@ -42,13 +42,22 @@ class ComparisonScheduler implements IComparisonScheduler {
     this.isRunning = false;
     this.schedulerConfig = {} as SchedulerConfig;
 
-    this.teamDiscoveryService = new TeamDiscoveryService(params);
-    this.dualRealtimeCommunicator = new DualRealtimeCommunicator(params);
+    const teamDiscoveryConfig = (config?.teamDiscovery as Record<string, unknown>) || {} as Record<string, unknown>;
+
+    const dualRealtimeConfig = (config?.dualRealtimeCommunicator as Record<string, unknown>) || {} as Record<string, unknown>;
+
+    this.teamDiscoveryService = new TeamDiscoveryService({
+      services,
+      config: teamDiscoveryConfig,
+    });
+    this.dualRealtimeCommunicator = new DualRealtimeCommunicator({
+      services,
+      config: dualRealtimeConfig,
+    });
     this.comparisonEngine = new ComparisonEngine(params);
     this.metricsEmitter = new MetricsEmitter(params);
 
-    const schedulerConfig = (config?.comparisonScheduler as Record<string, unknown>)?.comparisonScheduler as Record<string, unknown> || {};
-    const channelPrefixes = (schedulerConfig.channelPrefixes as string[]) || ['team_'];
+    const channelPrefixes = (config?.channelPrefixes as string[]) || ['team_'];
     this.channelIdBuilder = new ChannelIdBuilder(channelPrefixes);
   }
 
@@ -119,7 +128,7 @@ class ComparisonScheduler implements IComparisonScheduler {
   }
 
   private _loadSchedulerConfig(): void {
-    const cfg = (this.config.comparisonScheduler as Record<string, unknown>)?.comparisonScheduler as Record<string, unknown> || {};
+    const cfg = (this.config.comparisonScheduler as Record<string, unknown>) || {};
 
     this.schedulerConfig = {
       enabled: cfg?.enabled !== false,
