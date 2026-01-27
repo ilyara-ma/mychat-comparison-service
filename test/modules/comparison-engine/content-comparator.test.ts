@@ -1,21 +1,11 @@
 import { expect } from 'chai';
-import sinon from 'sinon';
 import ContentComparator from '../../../src/modules/comparison-engine/content-comparator';
-import { ILogger } from '../../../src/types';
 
 describe('ContentComparator', () => {
   let contentComparator: ContentComparator;
-  let logger: ILogger;
 
   beforeEach(() => {
-    logger = {
-      info: sinon.stub(),
-      error: sinon.stub(),
-      warn: sinon.stub(),
-      debug: sinon.stub(),
-    };
-
-    contentComparator = new ContentComparator(logger);
+    contentComparator = new ContentComparator();
   });
 
   describe('compareContent', () => {
@@ -82,6 +72,39 @@ describe('ContentComparator', () => {
 
       expect(result.equal).to.be.false;
       expect(result.differences).to.be.an('array');
+    });
+
+    it('should detect type mismatches', () => {
+      const pubnubMsg = { message: { count: 123 } };
+      const chatServiceMsg = { content: { count: '123' } };
+
+      const result = contentComparator.compareContent(pubnubMsg, chatServiceMsg);
+
+      expect(result.equal).to.be.false;
+      expect(result.differences).to.be.an('array');
+      expect(result.differences?.some((d) => d.type === 'type_mismatch')).to.be.true;
+    });
+
+    it('should detect missing keys in pubnub', () => {
+      const pubnubMsg = { message: { text: 'hello' } };
+      const chatServiceMsg = { content: { text: 'hello', extra: 'field' } };
+
+      const result = contentComparator.compareContent(pubnubMsg, chatServiceMsg);
+
+      expect(result.equal).to.be.false;
+      expect(result.differences).to.be.an('array');
+      expect(result.differences?.some((d) => d.type === 'missing_in_pubnub')).to.be.true;
+    });
+
+    it('should detect missing keys in chatService', () => {
+      const pubnubMsg = { message: { text: 'hello', extra: 'field' } };
+      const chatServiceMsg = { content: { text: 'hello' } };
+
+      const result = contentComparator.compareContent(pubnubMsg, chatServiceMsg);
+
+      expect(result.equal).to.be.false;
+      expect(result.differences).to.be.an('array');
+      expect(result.differences?.some((d) => d.type === 'missing_in_chatservice')).to.be.true;
     });
   });
 });

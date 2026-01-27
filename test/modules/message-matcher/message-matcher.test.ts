@@ -1,40 +1,12 @@
 import { expect } from 'chai';
-import sinon from 'sinon';
 import MessageMatcher from '../../../src/modules/message-matcher/message-matcher';
-import { IAlerts, ILogger, ModuleParams } from '../../../src/types';
 import { ChatMessage, PubnubMessage } from '../../../src/modules/message-matcher/types';
 
 describe('MessageMatcher', () => {
   let messageMatcher: MessageMatcher;
-  let logger: ILogger;
-  let alerts: IAlerts;
-  let services: ModuleParams['services'];
 
   beforeEach(() => {
-    logger = {
-      info: sinon.stub(),
-      error: sinon.stub(),
-      warn: sinon.stub(),
-      debug: sinon.stub(),
-    };
-
-    alerts = {
-      counter: sinon.stub(),
-      gauge: sinon.stub(),
-      histogram: sinon.stub(),
-    };
-
-    services = {
-      loggerManager: {
-        getLogger: sinon.stub().returns(logger),
-      },
-      alerts,
-      featureConfig: {
-        client: {} as any,
-      },
-    } as any;
-
-    messageMatcher = new MessageMatcher({ services, config: {} });
+    messageMatcher = new MessageMatcher();
   });
 
   describe('matchMessages', () => {
@@ -114,15 +86,14 @@ describe('MessageMatcher', () => {
       expect(result.chatServiceOnly).to.have.lengthOf(1);
     });
 
-    it('should use fuzzy matching when timetoken not found', () => {
-      const timestamp = 1000000;
+    it('should not match messages without matching IDs', () => {
       const pubnubMessages: PubnubMessage[] = [
-        { timetoken: String(timestamp * 10000), message: { text: 'hello', userId: 'user1' } },
+        { timetoken: '100', message: { text: 'hello', userId: 'user1' } },
       ];
 
       const chatServiceMessages: ChatMessage[] = [
         {
-          createdAt: timestamp,
+          id: '200',
           content: {
             text: 'hello',
             userId: 'user1',
@@ -132,10 +103,9 @@ describe('MessageMatcher', () => {
 
       const result = messageMatcher.matchMessages(pubnubMessages, chatServiceMessages);
 
-      expect(result.matched.length).to.be.greaterThan(0);
-      if (result.matched.length > 0) {
-        expect((alerts.counter as sinon.SinonStub).calledWith('chat_comparison.fuzzy_matches', {})).to.be.true;
-      }
+      expect(result.matched).to.have.lengthOf(0);
+      expect(result.pubnubOnly).to.have.lengthOf(1);
+      expect(result.chatServiceOnly).to.have.lengthOf(1);
     });
 
     it('should extract messageId from nested message.id', () => {

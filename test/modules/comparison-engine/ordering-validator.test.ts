@@ -1,22 +1,12 @@
 import { expect } from 'chai';
-import sinon from 'sinon';
 import OrderingValidator from '../../../src/modules/comparison-engine/ordering-validator';
-import { ILogger } from '../../../src/types';
 import { MessagePair } from '../../../src/modules/comparison-engine/types';
 
 describe('OrderingValidator', () => {
   let orderingValidator: OrderingValidator;
-  let logger: ILogger;
 
   beforeEach(() => {
-    logger = {
-      info: sinon.stub(),
-      error: sinon.stub(),
-      warn: sinon.stub(),
-      debug: sinon.stub(),
-    };
-
-    orderingValidator = new OrderingValidator(logger);
+    orderingValidator = new OrderingValidator();
   });
 
   describe('validate', () => {

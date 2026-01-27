@@ -39,20 +39,3 @@ export type MatchResult = {
   pubnubOnly: PubnubMessage[];
   chatServiceOnly: ChatMessage[];
 };
-
-export type FuzzyMatcherChatMessage = {
-  id?: string;
-  message?: {
-    id?: string;
-    content?: unknown;
-    createdAt?: number;
-  };
-  content?: unknown;
-  createdAt?: number;
-};
-
-export type FuzzyMatcherPubnubMessage = {
-  timetoken?: string;
-  message?: unknown;
-  [key: string]: unknown;
-};

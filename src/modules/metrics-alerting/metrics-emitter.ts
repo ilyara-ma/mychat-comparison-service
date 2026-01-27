@@ -39,11 +39,6 @@ class MetricsEmitter {
     } = comparisonResult;
 
     if (skipped) {
-      this.logger.warn('Skipping metrics emission for skipped comparison', {
-        teamId,
-        channelId,
-        reason: comparisonResult.reason,
-      });
       return;
     }
 
@@ -103,7 +98,7 @@ class MetricsEmitter {
   private _loadThresholds(): Partial<ThresholdsConfig> {
     const config = (this.config.comparisonThresholds as Record<string, number>) || {};
 
-    const thresholds = {
+    return {
       messageCountDiscrepancyPercent: config.messageCountDiscrepancyPercent || 5,
       messageCountDiscrepancyAbsolute: config.messageCountDiscrepancyAbsolute || 10,
       contentMismatchRatePercent: config.contentMismatchRatePercent || 1,
@@ -112,9 +107,6 @@ class MetricsEmitter {
       latencyDiffMsMax: config.latencyDiffMsMax || 5000,
       apiFailureRatePercent: config.apiFailureRatePercent || 5,
     };
-
-    this.logger.info('Loaded thresholds configuration', thresholds);
-    return thresholds;
   }
 }
 

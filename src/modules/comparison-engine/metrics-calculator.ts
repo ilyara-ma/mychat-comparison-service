@@ -1,13 +1,6 @@
-import { ILogger } from '../../types';
 import { ComparisonMetrics, LatencyMetrics, MessagePair } from './types';
 
 class MetricsCalculator {
-  private logger: ILogger;
-
-  constructor(logger: ILogger) {
-    this.logger = logger;
-  }
-
   public calculateMetrics(
     matchedPairs: MessagePair[],
     pubnubOnlyCount: number,

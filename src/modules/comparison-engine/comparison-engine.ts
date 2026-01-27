@@ -22,23 +22,16 @@ class ComparisonEngine {
   constructor(params: ModuleParams) {
     const { services } = params;
     this.logger = services.loggerManager.getLogger('comparison-engine');
-    this.messageMatcher = new MessageMatcher(params);
-    this.contentComparator = new ContentComparator(this.logger);
-    this.orderingValidator = new OrderingValidator(this.logger);
-    this.metricsCalculator = new MetricsCalculator(this.logger);
+    this.messageMatcher = new MessageMatcher();
+    this.contentComparator = new ContentComparator();
+    this.orderingValidator = new OrderingValidator();
+    this.metricsCalculator = new MetricsCalculator();
   }
 
   public async compare(fetchResult: FetchResult): Promise<ComparisonResult> {
     const {
       teamId, channelId, pubnubMessages, chatServiceMessages, pubnubSuccess, chatServiceSuccess,
     } = fetchResult;
-
-    this.logger.info('Starting comparison', {
-      teamId,
-      channelId,
-      pubnubMessageCount: pubnubMessages.length,
-      chatServiceMessageCount: chatServiceMessages.length,
-    });
 
     if (!pubnubSuccess || !chatServiceSuccess) {
       this.logger.warn('Skipping comparison due to fetch failures', {
@@ -51,7 +44,7 @@ class ComparisonEngine {
     }
 
     const { matched, pubnubOnly, chatServiceOnly } = this.messageMatcher.matchMessages(
-      pubnubMessages as Array<{ timetoken: string; [key: string]: unknown }>,
+      pubnubMessages as Array<{ timetoken: string;[key: string]: unknown }>,
       chatServiceMessages as Array<{ [key: string]: unknown }>,
     );
 

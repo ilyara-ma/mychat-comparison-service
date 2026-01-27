@@ -1,14 +1,10 @@
-import { ILogger } from '../../types';
 import MessageNormalizer from '../../utils/message-normalizer';
 import { ContentComparisonResult, ContentDifference } from './types';
 
 class ContentComparator {
-  private logger: ILogger;
-
   private messageNormalizer: MessageNormalizer;
 
-  constructor(logger: ILogger) {
-    this.logger = logger;
+  constructor() {
     this.messageNormalizer = new MessageNormalizer();
   }
 
@@ -69,7 +65,7 @@ class ContentComparator {
       return content;
     }
 
-    return message;
+    return null;
   }
 
   private _findDifferences(obj1: unknown, obj2: unknown, path = ''): ContentDifference[] {

@@ -25,8 +25,6 @@ class DualRealtimeCommunicator {
   }
 
   public async init(): Promise<void> {
-    this.logger.info('Initializing Dual Realtime Communicator');
-
     const RealtimeCommunicationsService = require('@moonactive/moonactive-realtime-communications');
     const rtcConfig = (this.config.rtcService as Record<string, unknown>) || {};
     const rollout = (rtcConfig.rollout as Record<string, Record<string, unknown>>) || {};
@@ -51,19 +49,17 @@ class DualRealtimeCommunicator {
 
     await this.pubnubCommunicator.init();
     await this.chatServiceCommunicator.init();
-
-    this.logger.info('Dual Realtime Communicator initialized successfully');
   }
 
   public async fetchMessagesFromBothSystems(
     channel: string,
     options: Record<string, unknown> = {},
   ): Promise<{
-      pubnubMessages: unknown[];
-      chatServiceMessages: unknown[];
-      pubnubSuccess: boolean;
-      chatServiceSuccess: boolean;
-    }> {
+    pubnubMessages: unknown[];
+    chatServiceMessages: unknown[];
+    pubnubSuccess: boolean;
+    chatServiceSuccess: boolean;
+  }> {
     const startTime = Date.now();
 
     const [pubnubResult, chatServiceResult] = await Promise.allSettled([

@@ -26,11 +26,8 @@ flowchart TD
     StartScheduler -->|Yes| RefreshTeams[Refresh Teams]
     StartScheduler -->|No| Stop([Service Running])
     
-    RefreshTeams --> TeamDiscovery[TeamDiscoveryService.refreshTeams]
-    TeamDiscovery --> Discover[Discover Teams from DB/Config]
-    Discover --> Cache[Update TeamCache]
-    
-    Cache --> ScheduleIntervals[Schedule Intervals]
+    RefreshTeams --> TeamDiscovery[TeamDiscoveryService.initialize]
+    TeamDiscovery --> ScheduleIntervals[Schedule Intervals]
     ScheduleIntervals --> TeamInterval[Team Discovery Interval<br/>Every 30 min]
     ScheduleIntervals --> ComparisonInterval[Comparison Interval<br/>Every 15 min]
     
@@ -91,21 +88,14 @@ classDiagram
     
     class TeamDiscoveryService {
         -teamsDAL: ITeamsDAL
-        -teamScanner: TeamScanner
-        -teamCache: TeamCache
-        +refreshTeams()
-        +getCachedTeams()
+        -batchSize: number
+        +initialize()
+        +getTeamsBatch(): string[]
     }
     
-    class TeamScanner {
-        +scanTeams()
-        +getTeamsByIds()
-    }
-    
-    class TeamCache {
-        +setTeams()
-        +getTeams()
-        +size()
+    class ChannelIdBuilder {
+        -channelPrefixes: string[]
+        +buildChannelIds(teamId)
     }
     
     class MessageFetcherService {
@@ -190,9 +180,8 @@ classDiagram
     ComparisonScheduler --> ComparisonEngine
     ComparisonScheduler --> MetricsEmitter
     
-    TeamDiscoveryService --> TeamScanner
-    TeamDiscoveryService --> TeamCache
     TeamDiscoveryService --> ITeamsDAL
+    ComparisonScheduler --> ChannelIdBuilder
     
     MessageFetcherService --> DualRealtimeCommunicator
     MessageFetcherService --> BatchProcessor

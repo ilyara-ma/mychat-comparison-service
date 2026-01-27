@@ -135,7 +135,11 @@
       "pollingTimeWindowMinutes": 20,
       "batchSize": 50,
       "maxMessagesPerFetch": 100,
-      "teamIdsOverride": []
+      "channelPrefixes": [
+        "team_",
+        "lobby_",
+        "chat_"
+      ]
     },
     "comparisonThresholds": {
       "messageCountDiscrepancyPercent": 5,

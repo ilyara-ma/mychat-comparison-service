@@ -1,22 +1,12 @@
 import { expect } from 'chai';
-import sinon from 'sinon';
 import MetricsCalculator from '../../../src/modules/comparison-engine/metrics-calculator';
-import { ILogger } from '../../../src/types';
 import { MessagePair } from '../../../src/modules/comparison-engine/types';
 
 describe('MetricsCalculator', () => {
   let metricsCalculator: MetricsCalculator;
-  let logger: ILogger;
 
   beforeEach(() => {
-    logger = {
-      info: sinon.stub(),
-      error: sinon.stub(),
-      warn: sinon.stub(),
-      debug: sinon.stub(),
-    };
-
-    metricsCalculator = new MetricsCalculator(logger);
+    metricsCalculator = new MetricsCalculator();
   });
 
   describe('calculateMetrics', () => {
@@ -190,6 +180,52 @@ describe('MetricsCalculator', () => {
       expect(metrics.chatMissingCount).to.equal(5);
       expect(metrics.pubnubMissingCount).to.equal(2);
       expect(metrics.avgLatencyDiff).to.be.greaterThan(0);
+    });
+
+    it('should handle null messages when extracting timestamp', () => {
+      const matchedPairs: MessagePair[] = [
+        {
+          pubnubMsg: null as unknown as Record<string, unknown>,
+          chatMsg: null as unknown as Record<string, unknown>,
+        },
+      ];
+
+      const metrics = metricsCalculator.calculateMetrics(
+        matchedPairs,
+        0,
+        0,
+        0,
+        1,
+        1,
+      );
+
+      expect(metrics.avgLatencyDiff).to.equal(0);
+      expect(metrics.maxLatencyDiff).to.equal(0);
+    });
+
+    it('should extract timestamp from nested message.createdAt', () => {
+      const matchedPairs: MessagePair[] = [
+        {
+          pubnubMsg: { timetoken: '16094592000000000' },
+          chatMsg: { message: { createdAt: 1609459200000 } },
+        },
+        {
+          pubnubMsg: { timetoken: '16094592010000000' },
+          chatMsg: { message: { createdAt: 1609459202000 } },
+        },
+      ];
+
+      const metrics = metricsCalculator.calculateMetrics(
+        matchedPairs,
+        0,
+        0,
+        0,
+        2,
+        2,
+      );
+
+      expect(metrics.avgLatencyDiff).to.be.greaterThan(0);
+      expect(metrics.maxLatencyDiff).to.be.greaterThan(0);
     });
   });
 });

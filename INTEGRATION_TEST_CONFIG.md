@@ -279,7 +279,7 @@ PORT=3000
     "pollingTimeWindowMinutes": 20,
     "batchSize": 50,
     "maxMessagesPerFetch": 100,
-    "teamIdsOverride": []
+    "channelPrefixes": ["team_", "lobby_", "chat_"]
   }
 }
 ```

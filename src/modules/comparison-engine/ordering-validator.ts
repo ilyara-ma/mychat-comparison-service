@@ -1,13 +1,6 @@
-import { ILogger } from '../../types';
 import { MessagePair, OrderingViolation } from './types';
 
 class OrderingValidator {
-  private logger: ILogger;
-
-  constructor(logger: ILogger) {
-    this.logger = logger;
-  }
-
   public validate(matchedPairs: MessagePair[]): OrderingViolation[] {
     if (!matchedPairs || matchedPairs.length <= 1) {
       return [];
