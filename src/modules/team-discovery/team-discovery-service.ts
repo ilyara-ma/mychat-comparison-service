@@ -1,4 +1,3 @@
-import { ITeamDiscoveryService } from '../../services/types';
 import {
   IAlerts, ILogger, ModuleParams, Team,
 } from '../../types';
@@ -6,7 +5,7 @@ import TeamCache from './team-cache';
 import TeamScanner from './team-scanner';
 import { ITeamsDAL } from './types';
 
-class TeamDiscoveryService implements ITeamDiscoveryService {
+class TeamDiscoveryService {
   private services: ModuleParams['services'];
 
   private config: Record<string, unknown>;
@@ -15,9 +14,9 @@ class TeamDiscoveryService implements ITeamDiscoveryService {
 
   private alerts: IAlerts;
 
-  private teamsDAL: ITeamsDAL | null;
+  private teamsDAL: ITeamsDAL;
 
-  private teamScanner: TeamScanner | null;
+  private teamScanner: TeamScanner;
 
   private teamCache: TeamCache;
 
@@ -27,13 +26,7 @@ class TeamDiscoveryService implements ITeamDiscoveryService {
     this.config = config || {};
     this.logger = services.loggerManager.getLogger('team-discovery');
     this.alerts = services.alerts;
-    this.teamsDAL = null;
-    this.teamScanner = null;
     this.teamCache = new TeamCache();
-  }
-
-  public async init(): Promise<void> {
-    this.logger.info('Initializing Team Discovery Service');
 
     const TeamsDAL = require('@moonactive/teams-dal');
     this.teamsDAL = new TeamsDAL({
@@ -41,43 +34,12 @@ class TeamDiscoveryService implements ITeamDiscoveryService {
       config: (this.config.teamsDAL as Record<string, unknown>) || {},
     }) as ITeamsDAL;
 
-    await this.teamsDAL.init();
-
     this.teamScanner = new TeamScanner(this.logger, this.teamsDAL);
+  }
 
+  public async initialize(): Promise<void> {
+    await this.teamsDAL.init();
     await this._refreshTeams();
-
-    this.logger.info('Team Discovery Service initialized successfully');
-  }
-
-  public async postInit(): Promise<void> {
-    // Empty implementation
-  }
-
-  public async deepHealth(): Promise<void> {
-    // Empty implementation
-  }
-
-  public async destroy(): Promise<void> {
-    if (this.teamsDAL) {
-      await this.teamsDAL.destroy();
-    }
-  }
-
-  private async _refreshTeams(): Promise<void> {
-    try {
-      this.logger.info('Refreshing teams');
-      const teams = await this._discoverTeams();
-      this.teamCache.setTeams(teams);
-      this.alerts.gauge('chat_comparison.discovered_teams_count', {}, teams.length);
-      this.logger.info('Teams refreshed successfully', { count: teams.length });
-    } catch (error) {
-      this.logger.error('Failed to refresh teams', {
-        error: (error as Error).message,
-        stack: (error as Error).stack,
-      });
-      this.alerts.counter('chat_comparison.team_discovery_failures', {});
-    }
   }
 
   public getCachedTeams(): Team[] {
@@ -105,12 +67,28 @@ class TeamDiscoveryService implements ITeamDiscoveryService {
     return allTeams.filter((team) => teamIds.includes(team.teamId));
   }
 
+  private async _refreshTeams(): Promise<void> {
+    try {
+      this.logger.info('Refreshing teams');
+      const teams = await this._discoverTeams();
+      this.teamCache.setTeams(teams);
+      this.alerts.gauge('chat_comparison.discovered_teams_count', {}, teams.length);
+      this.logger.info('Teams refreshed successfully', { count: teams.length });
+    } catch (error) {
+      this.logger.error('Failed to refresh teams', {
+        error: (error as Error).message,
+        stack: (error as Error).stack,
+      });
+      this.alerts.counter('chat_comparison.team_discovery_failures', {});
+    }
+  }
+
   private async _discoverTeams(): Promise<Team[]> {
     const manualTeamIds = this._getManualTeamIds();
 
     if (manualTeamIds && manualTeamIds.length > 0) {
       this.logger.info('Using manual team ID override', { count: manualTeamIds.length });
-      return this.teamScanner!.getTeamsByIds(manualTeamIds);
+      return this.teamScanner.getTeamsByIds(manualTeamIds);
     }
 
     this.logger.warn('No manual team IDs configured - returning empty team list');

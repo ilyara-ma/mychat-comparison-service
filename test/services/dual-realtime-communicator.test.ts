@@ -125,15 +125,4 @@ describe('DualRealtimeCommunicator', () => {
       expect(result.chatServiceMessages).to.deep.equal([]);
     });
   });
-
-  describe('destroy', () => {
-    it('should destroy both communicators', async () => {
-      const dualCommunicator = new DualRealtimeCommunicator({ services: services as IServices, config });
-      await dualCommunicator.init();
-      await dualCommunicator.destroy();
-
-      expect(pubnubCommunicatorStub.destroy.calledOnce).to.be.true;
-      expect(chatServiceCommunicatorStub.destroy.calledOnce).to.be.true;
-    });
-  });
 });

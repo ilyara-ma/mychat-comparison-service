@@ -1,5 +1,4 @@
 import { ComparisonResult } from '../modules/comparison-engine/types';
-import { FetchResult } from '../types';
 
 export interface IRealtimeCommunicationsService {
   init: () => Promise<void>;
@@ -21,27 +20,6 @@ export interface IRealtimeCommunicationsService {
     value?: unknown[];
     status?: string;
   }>;
-}
-
-export interface ITeamDiscoveryService {
-  getCachedTeams: () => Array<{ teamId: string; channelId: string }>;
-  getTeamsByIds: (teamIds: string[]) => Promise<Array<{ teamId: string; channelId: string }>>;
-}
-
-export interface IMessageFetcherService {
-  fetchMessages: (
-    channelId: string,
-    timeWindow: { fromTimestamp: number; toTimestamp: number }
-  ) => Promise<FetchResult>;
-}
-
-export interface IComparisonEngine {
-  compare: (fetchResult: FetchResult) => Promise<ComparisonResult>;
-}
-
-export interface IMetricsEmitter {
-  emitComparisonMetrics: (comparisonResult: ComparisonResult) => void;
-  emitBatchSummary: (comparisonResults: ComparisonResult[]) => void;
 }
 
 export interface IComparisonScheduler {

@@ -7,12 +7,6 @@ export interface IServices {
     client: IFeatureConfigClient;
   };
   secretManager?: unknown;
-  dualRealtimeCommunicator: unknown;
-  teamDiscoveryService: unknown;
-  messageFetcherService: unknown;
-  messageMatcher: unknown;
-  comparisonEngine: unknown;
-  metricsEmitter: unknown;
   comparisonScheduler: unknown;
 }
 
@@ -90,7 +84,6 @@ export type ComparisonResult = {
 
 export type SchedulerConfig = {
   enabled: boolean;
-  teamDiscoveryIntervalMinutes: number;
   pollingIntervalMinutes: number;
   pollingTimeWindowMinutes: number;
   batchSize: number;

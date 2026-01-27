@@ -37,19 +37,7 @@ describe('MessageMatcher', () => {
     messageMatcher = new MessageMatcher({ services, config: {} });
   });
 
-  describe('init', () => {
-    it('should initialize fuzzy matcher', async () => {
-      await messageMatcher.init();
-
-      expect((logger.info as sinon.SinonStub).callCount).to.equal(2);
-    });
-  });
-
   describe('matchMessages', () => {
-    beforeEach(async () => {
-      await messageMatcher.init();
-    });
-
     it('should match messages by timetoken', () => {
       const pubnubMessages: PubnubMessage[] = [
         { timetoken: '100', message: { text: 'hello' } },

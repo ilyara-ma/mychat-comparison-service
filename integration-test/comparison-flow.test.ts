@@ -4,9 +4,6 @@ import sinon from 'sinon';
 describe('Integration: Comparison Flow', () => {
   let app: unknown;
   let comparisonScheduler: unknown;
-  let teamDiscoveryService: unknown;
-  let messageFetcherService: unknown;
-  let comparisonEngine: unknown;
 
   before(async () => {
     process.env.NODE_ENV = 'test';

@@ -1,30 +1,30 @@
+import ComparisonEngine from '../modules/comparison-engine/comparison-engine';
 import { ComparisonResult } from '../modules/comparison-engine/types';
+import MetricsEmitter from '../modules/metrics-alerting/metrics-emitter';
+import TeamDiscoveryService from '../modules/team-discovery/team-discovery-service';
 import {
-  FetchResult, IAlerts, ILogger, ModuleParams, SchedulerConfig,
+  FetchResult, IAlerts, ILogger, ModuleParams, SchedulerConfig, TimeWindow,
 } from '../types';
 import { calculateTimeWindow } from '../utils/time-window';
-import {
-  IComparisonEngine, IComparisonScheduler, IMessageFetcherService, IMetricsEmitter, ITeamDiscoveryService,
-} from './types';
+import DualRealtimeCommunicator from './dual-realtime-communicator';
+import { IComparisonScheduler } from './types';
 
 class ComparisonScheduler implements IComparisonScheduler {
-  private services: ModuleParams['services'];
-
   private config: Record<string, unknown>;
 
   private logger: ILogger;
 
   private alerts: IAlerts;
 
-  private teamDiscoveryService: ITeamDiscoveryService | null;
+  private services: ModuleParams['services'];
 
-  private messageFetcherService: IMessageFetcherService | null;
+  private teamDiscoveryService: TeamDiscoveryService;
 
-  private comparisonEngine: IComparisonEngine | null;
+  private dualRealtimeCommunicator: DualRealtimeCommunicator;
 
-  private metricsEmitter: IMetricsEmitter | null;
+  private comparisonEngine: ComparisonEngine;
 
-  private teamDiscoveryInterval: NodeJS.Timeout | null;
+  private metricsEmitter: MetricsEmitter;
 
   private comparisonInterval: NodeJS.Timeout | null;
 
@@ -38,23 +38,21 @@ class ComparisonScheduler implements IComparisonScheduler {
     this.config = config || {};
     this.logger = services.loggerManager.getLogger('comparison-scheduler');
     this.alerts = services.alerts;
-    this.teamDiscoveryService = null;
-    this.messageFetcherService = null;
-    this.comparisonEngine = null;
-    this.metricsEmitter = null;
-    this.teamDiscoveryInterval = null;
     this.comparisonInterval = null;
     this.isRunning = false;
     this.schedulerConfig = {} as SchedulerConfig;
+
+    this.teamDiscoveryService = new TeamDiscoveryService(params);
+    this.dualRealtimeCommunicator = new DualRealtimeCommunicator(params);
+    this.comparisonEngine = new ComparisonEngine(params);
+    this.metricsEmitter = new MetricsEmitter(params);
   }
 
   public async init(): Promise<void> {
     this.logger.info('Initializing Comparison Scheduler');
 
-    this.teamDiscoveryService = this.services.teamDiscoveryService as ITeamDiscoveryService;
-    this.messageFetcherService = this.services.messageFetcherService as IMessageFetcherService;
-    this.comparisonEngine = this.services.comparisonEngine as IComparisonEngine;
-    this.metricsEmitter = this.services.metricsEmitter as IMetricsEmitter;
+    await this.teamDiscoveryService.initialize();
+    await this.dualRealtimeCommunicator.init();
 
     this._loadSchedulerConfig();
 
@@ -71,10 +69,6 @@ class ComparisonScheduler implements IComparisonScheduler {
     }
   }
 
-  public async deepHealth(): Promise<void> {
-    // Empty implementation
-  }
-
   public async destroy(): Promise<void> {
     await this.stop();
   }
@@ -87,11 +81,6 @@ class ComparisonScheduler implements IComparisonScheduler {
 
     this.logger.info('Starting Comparison Scheduler');
     this.isRunning = true;
-
-    this.teamDiscoveryInterval = setInterval(
-      () => this._runTeamDiscovery(),
-      this.schedulerConfig.teamDiscoveryIntervalMinutes * 60 * 1000,
-    );
 
     this.comparisonInterval = setInterval(
       () => this._runComparison(),
@@ -109,11 +98,6 @@ class ComparisonScheduler implements IComparisonScheduler {
     }
 
     this.logger.info('Stopping Comparison Scheduler');
-
-    if (this.teamDiscoveryInterval) {
-      clearInterval(this.teamDiscoveryInterval);
-      this.teamDiscoveryInterval = null;
-    }
 
     if (this.comparisonInterval) {
       clearInterval(this.comparisonInterval);
@@ -135,7 +119,7 @@ class ComparisonScheduler implements IComparisonScheduler {
       const comparisonResults: ComparisonResult[] = [];
 
       for (const channelId of channelIds) {
-        const fetchResult = await this.messageFetcherService!.fetchMessages(channelId, timeWindow);
+        const fetchResult = await this._fetchMessages(channelId, timeWindow);
         const comparisonResult = await this._compareTeam(fetchResult);
         if (comparisonResult) {
           comparisonResults.push(comparisonResult);
@@ -148,10 +132,10 @@ class ComparisonScheduler implements IComparisonScheduler {
     let teams: Array<{ teamId: string; channelId: string }>;
 
     if (teamIds && teamIds.length > 0) {
-      teams = await this.teamDiscoveryService!.getTeamsByIds(teamIds);
+      teams = await this.teamDiscoveryService.getTeamsByIds(teamIds);
       this.logger.info('Running manual comparison for specified teams', { teamIds, teamCount: teams.length });
     } else {
-      teams = this.teamDiscoveryService!.getCachedTeams();
+      teams = this.teamDiscoveryService.getCachedTeams();
       this.logger.info('Running manual comparison for all cached teams', { teamCount: teams.length });
     }
 
@@ -162,7 +146,7 @@ class ComparisonScheduler implements IComparisonScheduler {
     const comparisonResults: ComparisonResult[] = [];
 
     for (const team of teams) {
-      const fetchResult = await this.messageFetcherService!.fetchMessages(team.channelId, timeWindow);
+      const fetchResult = await this._fetchMessages(team.channelId, timeWindow);
       const comparisonResult = await this._compareTeam(fetchResult);
       if (comparisonResult) {
         comparisonResults.push(comparisonResult);
@@ -177,7 +161,6 @@ class ComparisonScheduler implements IComparisonScheduler {
 
     this.schedulerConfig = {
       enabled: cfg?.enabled !== false,
-      teamDiscoveryIntervalMinutes: (cfg?.teamDiscoveryIntervalMinutes as number) || 30,
       pollingIntervalMinutes: (cfg?.pollingIntervalMinutes as number) || 15,
       pollingTimeWindowMinutes: (cfg?.pollingTimeWindowMinutes as number) || 20,
       batchSize: (cfg?.batchSize as number) || 50,
@@ -185,10 +168,6 @@ class ComparisonScheduler implements IComparisonScheduler {
     };
 
     this.logger.info('Loaded scheduler configuration', this.schedulerConfig);
-  }
-
-  private async _runTeamDiscovery(): Promise<void> {
-    this.logger.info('Scheduled team discovery - teams are refreshed automatically when needed via getTeamsByIds');
   }
 
   private async _runComparison(): Promise<void> {
@@ -201,7 +180,7 @@ class ComparisonScheduler implements IComparisonScheduler {
     try {
       this.logger.info('Starting scheduled comparison run');
 
-      const teams = this.teamDiscoveryService!.getCachedTeams();
+      const teams = this.teamDiscoveryService.getCachedTeams();
 
       if (teams.length === 0) {
         this.logger.warn('No teams to compare');
@@ -221,14 +200,14 @@ class ComparisonScheduler implements IComparisonScheduler {
       const comparisonResults: ComparisonResult[] = [];
 
       for (const team of teams) {
-        const fetchResult = await this.messageFetcherService!.fetchMessages(team.channelId, timeWindow);
+        const fetchResult = await this._fetchMessages(team.channelId, timeWindow);
         const comparisonResult = await this._compareTeam(fetchResult);
         if (comparisonResult) {
           comparisonResults.push(comparisonResult);
         }
       }
 
-      this.metricsEmitter!.emitBatchSummary(comparisonResults);
+      this.metricsEmitter.emitBatchSummary(comparisonResults);
 
       const duration = Date.now() - startTime;
       this.alerts.gauge('chat_comparison.comparison_run_duration_ms', {}, duration);
@@ -247,10 +226,67 @@ class ComparisonScheduler implements IComparisonScheduler {
     }
   }
 
+  private async _fetchMessages(channelId: string, timeWindow: TimeWindow): Promise<FetchResult> {
+    const { fromTimestamp, toTimestamp } = timeWindow;
+    const teamId = channelId;
+
+    try {
+      this.logger.info('Fetching messages for channel', {
+        channelId,
+        fromTimestamp,
+        toTimestamp,
+      });
+
+      const result = await this.dualRealtimeCommunicator.fetchMessagesFromBothSystems(
+        channelId,
+        {
+          includeMessageActions: true,
+          fromTimestamp,
+          toTimestamp,
+        },
+      );
+
+      this.alerts.counter('chat_comparison.message_fetches', {
+        teamId,
+        pubnubSuccess: result.pubnubSuccess ? 'true' : 'false',
+        chatServiceSuccess: result.chatServiceSuccess ? 'true' : 'false',
+      });
+
+      return {
+        teamId,
+        channelId,
+        pubnubMessages: result.pubnubMessages as unknown[],
+        chatServiceMessages: result.chatServiceMessages as unknown[],
+        pubnubSuccess: result.pubnubSuccess,
+        chatServiceSuccess: result.chatServiceSuccess,
+        fetchTimestamp: Date.now(),
+      };
+    } catch (error) {
+      this.logger.error('Failed to fetch messages for channel', {
+        channelId,
+        error: (error as Error).message,
+        stack: (error as Error).stack,
+      });
+
+      this.alerts.counter('chat_comparison.fetch_errors', { teamId });
+
+      return {
+        teamId,
+        channelId,
+        pubnubMessages: [],
+        chatServiceMessages: [],
+        pubnubSuccess: false,
+        chatServiceSuccess: false,
+        fetchTimestamp: Date.now(),
+        error: (error as Error).message,
+      };
+    }
+  }
+
   private async _compareTeam(fetchResult: FetchResult): Promise<ComparisonResult | null> {
     try {
-      const comparisonResult = await this.comparisonEngine!.compare(fetchResult);
-      this.metricsEmitter!.emitComparisonMetrics(comparisonResult);
+      const comparisonResult = await this.comparisonEngine.compare(fetchResult);
+      this.metricsEmitter.emitComparisonMetrics(comparisonResult);
       return comparisonResult;
     } catch (error) {
       const fr = fetchResult as Record<string, unknown>;

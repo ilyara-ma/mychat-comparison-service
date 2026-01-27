@@ -15,10 +15,6 @@ class ContentHasher {
       .digest('hex');
   }
 
-  public normalizeContent(content: unknown): unknown {
-    return this._normalizeContent(content);
-  }
-
   private _normalizeContent(content: unknown): unknown {
     if (typeof content !== 'object' || content === null) {
       return content;

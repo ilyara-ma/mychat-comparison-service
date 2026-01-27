@@ -1,4 +1,3 @@
-import { IMetricsEmitter } from '../../services/types';
 import {
   IAlerts, ILogger, ModuleParams, ThresholdsConfig,
 } from '../../types';
@@ -6,16 +5,16 @@ import AlertManager from './alert-manager';
 import LoggerFormatter from './logger-formatter';
 import { ComparisonResult } from './types';
 
-class MetricsEmitter implements IMetricsEmitter {
+class MetricsEmitter {
   private config: Record<string, unknown>;
 
   private logger: ILogger;
 
   private alerts: IAlerts;
 
-  private alertManager: AlertManager | null;
+  private alertManager: AlertManager;
 
-  private loggerFormatter: LoggerFormatter | null;
+  private loggerFormatter: LoggerFormatter;
 
   private thresholds: Partial<ThresholdsConfig>;
 
@@ -24,32 +23,10 @@ class MetricsEmitter implements IMetricsEmitter {
     this.config = config || {};
     this.logger = services.loggerManager.getLogger('metrics-emitter');
     this.alerts = services.alerts;
-    this.alertManager = null;
-    this.loggerFormatter = null;
-    this.thresholds = {};
-  }
-
-  public async init(): Promise<void> {
-    this.logger.info('Initializing Metrics Emitter');
 
     this.thresholds = this._loadThresholds();
-
     this.alertManager = new AlertManager(this.logger, this.alerts, this.thresholds);
     this.loggerFormatter = new LoggerFormatter(this.logger);
-
-    this.logger.info('Metrics Emitter initialized successfully', { thresholds: this.thresholds });
-  }
-
-  public async postInit(): Promise<void> {
-    // Empty implementation
-  }
-
-  public async deepHealth(): Promise<void> {
-    // Empty implementation
-  }
-
-  public async destroy(): Promise<void> {
-    // Empty implementation
   }
 
   public emitComparisonMetrics(comparisonResult: ComparisonResult): void {

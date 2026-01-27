@@ -1,5 +1,5 @@
 import { Services } from '@moonactive/microservice-core';
-import { IComparisonScheduler, ITeamDiscoveryService } from '../services/types';
+import { IComparisonScheduler } from '../services/types';
 import { ILogger } from '../types';
 
 type Request = {
@@ -23,7 +23,6 @@ async function runComparison(req: Request, res: Response): Promise<void> {
   const loggerManager = Services.get('loggerManager') as { getLogger: (name: string) => ILogger };
   const logger = loggerManager.getLogger('comparison-route');
   const comparisonScheduler = Services.get('comparisonScheduler') as IComparisonScheduler;
-  const teamDiscoveryService = Services.get('teamDiscoveryService') as ITeamDiscoveryService;
 
   try {
     let teamIds: string[] | undefined;
@@ -60,13 +59,10 @@ async function runComparison(req: Request, res: Response): Promise<void> {
 
     const results = await comparisonScheduler.runManualComparison(teamIds, channelIds);
 
-    const actualTeamCount = teamIds?.length || (channelIds ? 0 : teamDiscoveryService.getCachedTeams().length);
-    const actualChannelCount = channelIds?.length || 0;
-
     res.status(200).json({
       success: true,
-      teamCount: actualTeamCount,
-      channelCount: actualChannelCount,
+      teamCount: teamIds?.length || 0,
+      channelCount: channelIds?.length || 0,
       comparisonCount: results.length,
       results,
     });

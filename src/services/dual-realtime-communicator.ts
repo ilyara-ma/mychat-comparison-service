@@ -1,8 +1,7 @@
-import { IDualRealtimeCommunicator } from '../modules/message-fetcher/types';
 import { IAlerts, ILogger, ModuleParams } from '../types';
 import { IRealtimeCommunicationsService } from './types';
 
-class DualRealtimeCommunicator implements IDualRealtimeCommunicator {
+class DualRealtimeCommunicator {
   private services: ModuleParams['services'];
 
   private config: Record<string, unknown>;
@@ -54,23 +53,6 @@ class DualRealtimeCommunicator implements IDualRealtimeCommunicator {
     await this.chatServiceCommunicator.init();
 
     this.logger.info('Dual Realtime Communicator initialized successfully');
-  }
-
-  public async postInit(): Promise<void> {
-    // Empty implementation
-  }
-
-  public async deepHealth(): Promise<void> {
-    // Empty implementation
-  }
-
-  public async destroy(): Promise<void> {
-    if (this.pubnubCommunicator) {
-      await this.pubnubCommunicator.destroy();
-    }
-    if (this.chatServiceCommunicator) {
-      await this.chatServiceCommunicator.destroy();
-    }
   }
 
   public async fetchMessagesFromBothSystems(

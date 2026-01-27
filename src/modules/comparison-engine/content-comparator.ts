@@ -12,28 +12,26 @@ class ContentComparator {
     this.messageNormalizer = new MessageNormalizer();
   }
 
-  public areEqual(pubnubMsg: unknown, chatServiceMsg: unknown): boolean {
+  public compareContent(pubnubMsg: unknown, chatServiceMsg: unknown): ContentComparisonResult {
     const pubnubContent = this._extractContent(pubnubMsg, 'pubnub');
     const chatContent = this._extractContent(chatServiceMsg, 'chatService');
 
     if (!pubnubContent && !chatContent) {
-      return true;
+      return { equal: true };
     }
 
     if (!pubnubContent || !chatContent) {
-      return false;
+      return {
+        equal: false,
+        pubnubContent,
+        chatContent,
+        differences: this._findDifferences(pubnubContent, chatContent),
+      };
     }
 
-    return this.messageNormalizer.areContentsEqual(pubnubContent, chatContent);
-  }
-
-  public compareContent(pubnubMsg: unknown, chatServiceMsg: unknown): ContentComparisonResult {
-    const isEqual = this.areEqual(pubnubMsg, chatServiceMsg);
+    const isEqual = this.messageNormalizer.areContentsEqual(pubnubContent, chatContent);
 
     if (!isEqual) {
-      const pubnubContent = this._extractContent(pubnubMsg, 'pubnub');
-      const chatContent = this._extractContent(chatServiceMsg, 'chatService');
-
       return {
         equal: false,
         pubnubContent,
@@ -43,10 +41,6 @@ class ContentComparator {
     }
 
     return { equal: true };
-  }
-
-  public findDifferences(obj1: unknown, obj2: unknown, path = ''): ContentDifference[] {
-    return this._findDifferences(obj1, obj2, path);
   }
 
   private _extractContent(message: unknown, source: 'pubnub' | 'chatService'): unknown {

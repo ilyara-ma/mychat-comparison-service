@@ -1,58 +1,31 @@
-import { IComparisonEngine } from '../../services/types';
 import { ILogger, ModuleParams } from '../../types';
+import MessageMatcher from '../message-matcher/message-matcher';
 import ContentComparator from './content-comparator';
 import MetricsCalculator from './metrics-calculator';
 import OrderingValidator from './ordering-validator';
 import {
   ComparisonResult,
   FetchResult,
-  MatchResult,
 } from './types';
 
-class ComparisonEngine implements IComparisonEngine {
-  private services: ModuleParams['services'];
-
+class ComparisonEngine {
   private logger: ILogger;
 
-  private messageMatcher: { matchMessages: (p: unknown[], c: unknown[]) => MatchResult } | null;
+  private messageMatcher: MessageMatcher;
 
-  private contentComparator: ContentComparator | null;
+  private contentComparator: ContentComparator;
 
-  private orderingValidator: OrderingValidator | null;
+  private orderingValidator: OrderingValidator;
 
-  private metricsCalculator: MetricsCalculator | null;
+  private metricsCalculator: MetricsCalculator;
 
   constructor(params: ModuleParams) {
     const { services } = params;
-    this.services = services;
     this.logger = services.loggerManager.getLogger('comparison-engine');
-    this.messageMatcher = null;
-    this.contentComparator = null;
-    this.orderingValidator = null;
-    this.metricsCalculator = null;
-  }
-
-  public async init(): Promise<void> {
-    this.logger.info('Initializing Comparison Engine');
-
-    this.messageMatcher = this.services.messageMatcher as { matchMessages: (p: unknown[], c: unknown[]) => MatchResult };
+    this.messageMatcher = new MessageMatcher(params);
     this.contentComparator = new ContentComparator(this.logger);
     this.orderingValidator = new OrderingValidator(this.logger);
     this.metricsCalculator = new MetricsCalculator(this.logger);
-
-    this.logger.info('Comparison Engine initialized successfully');
-  }
-
-  public async postInit(): Promise<void> {
-    // Empty implementation
-  }
-
-  public async deepHealth(): Promise<void> {
-    // Empty implementation
-  }
-
-  public async destroy(): Promise<void> {
-    // Empty implementation
   }
 
   public async compare(fetchResult: FetchResult): Promise<ComparisonResult> {
@@ -77,30 +50,22 @@ class ComparisonEngine implements IComparisonEngine {
       return this._createSkippedResult(teamId, channelId, pubnubSuccess, chatServiceSuccess);
     }
 
-    const { matched, pubnubOnly, chatServiceOnly } = this.messageMatcher!.matchMessages(
-      pubnubMessages,
-      chatServiceMessages,
+    const { matched, pubnubOnly, chatServiceOnly } = this.messageMatcher.matchMessages(
+      pubnubMessages as Array<{ timetoken: string; [key: string]: unknown }>,
+      chatServiceMessages as Array<{ [key: string]: unknown }>,
     );
 
     const contentMismatches = this._findContentMismatches(matched);
 
-    const orderingViolations = this.orderingValidator!.validate(matched);
+    const orderingViolations = this.orderingValidator.validate(matched);
 
-    const latencyDiffs = this.metricsCalculator!.calculateLatencyDifferences(matched);
-
-    const countDiff = this.metricsCalculator!.calculateMessageCountDiscrepancy(
+    const metrics = this.metricsCalculator.calculateMetrics(
+      matched,
+      pubnubOnly.length,
+      chatServiceOnly.length,
+      contentMismatches.length,
       pubnubMessages.length,
       chatServiceMessages.length,
-    );
-
-    const coverage = this.metricsCalculator!.calculateCoverage(
-      matched.length,
-      pubnubMessages.length,
-    );
-
-    const contentMismatchRate = this.metricsCalculator!.calculateContentMismatchRate(
-      contentMismatches.length,
-      matched.length,
     );
 
     const result: ComparisonResult = {
@@ -108,14 +73,8 @@ class ComparisonEngine implements IComparisonEngine {
       channelId,
       timestamp: Date.now(),
       metrics: {
-        countDiff,
-        contentMismatchRate: Math.round(contentMismatchRate * 100) / 100,
+        ...metrics,
         orderingViolations: orderingViolations.length,
-        coverage: Math.round(coverage * 100) / 100,
-        avgLatencyDiff: latencyDiffs.avg,
-        maxLatencyDiff: latencyDiffs.max,
-        chatMissingCount: pubnubOnly.length,
-        pubnubMissingCount: chatServiceOnly.length,
       },
       details: {
         totalPubnubMessages: pubnubMessages.length,
@@ -142,8 +101,9 @@ class ComparisonEngine implements IComparisonEngine {
 
     matchedPairs.forEach((pair, index) => {
       const p = pair as { pubnubMsg: unknown; chatMsg: unknown };
-      if (!this.contentComparator!.areEqual(p.pubnubMsg, p.chatMsg)) {
-        const comparison = this.contentComparator!.compareContent(p.pubnubMsg, p.chatMsg);
+      const comparison = this.contentComparator.compareContent(p.pubnubMsg, p.chatMsg);
+
+      if (!comparison.equal) {
         const pubnub = p.pubnubMsg as Record<string, unknown>;
         const chat = p.chatMsg as Record<string, unknown>;
         mismatches.push({

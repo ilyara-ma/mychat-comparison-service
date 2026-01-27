@@ -19,32 +19,27 @@ describe('MetricsCalculator', () => {
     metricsCalculator = new MetricsCalculator(logger);
   });
 
-  describe('calculateLatencyDifferences', () => {
-    it('should return zeros for empty matched pairs', () => {
-      const result = metricsCalculator.calculateLatencyDifferences([]);
+  describe('calculateMetrics', () => {
+    it('should calculate all metrics with empty matched pairs', () => {
+      const metrics = metricsCalculator.calculateMetrics(
+        [],
+        5,
+        3,
+        0,
+        100,
+        95,
+      );
 
-      expect(result).to.deep.equal({
-        avg: 0,
-        max: 0,
-        min: 0,
-        median: 0,
-        differences: [],
-      });
+      expect(metrics.countDiff).to.equal(5);
+      expect(metrics.coverage).to.equal(0);
+      expect(metrics.contentMismatchRate).to.equal(0);
+      expect(metrics.avgLatencyDiff).to.equal(0);
+      expect(metrics.maxLatencyDiff).to.equal(0);
+      expect(metrics.chatMissingCount).to.equal(5);
+      expect(metrics.pubnubMissingCount).to.equal(3);
     });
 
-    it('should return zeros for null matched pairs', () => {
-      const result = metricsCalculator.calculateLatencyDifferences(null as unknown as MessagePair[]);
-
-      expect(result).to.deep.equal({
-        avg: 0,
-        max: 0,
-        min: 0,
-        median: 0,
-        differences: [],
-      });
-    });
-
-    it('should calculate latency differences correctly', () => {
+    it('should calculate all metrics with matched pairs', () => {
       const matchedPairs: MessagePair[] = [
         {
           pubnubMsg: { timetoken: '16094592000000000' },
@@ -52,20 +47,105 @@ describe('MetricsCalculator', () => {
         },
         {
           pubnubMsg: { timetoken: '16094592010000000' },
+          chatMsg: { createdAt: 1609459203000 },
+        },
+      ];
+
+      const metrics = metricsCalculator.calculateMetrics(
+        matchedPairs,
+        10,
+        5,
+        2,
+        100,
+        95,
+      );
+
+      expect(metrics.countDiff).to.equal(5);
+      expect(metrics.coverage).to.equal(2);
+      expect(metrics.contentMismatchRate).to.equal(100);
+      expect(metrics.avgLatencyDiff).to.be.greaterThan(0);
+      expect(metrics.maxLatencyDiff).to.be.greaterThan(0);
+      expect(metrics.chatMissingCount).to.equal(10);
+      expect(metrics.pubnubMissingCount).to.equal(5);
+    });
+
+    it('should handle perfect match scenario', () => {
+      const matchedPairs: MessagePair[] = [
+        {
+          pubnubMsg: { timetoken: '16094592000000000' },
+          chatMsg: { createdAt: 1609459200000 },
+        },
+        {
+          pubnubMsg: { timetoken: '16094592010000000' },
+          chatMsg: { createdAt: 1609459201000 },
+        },
+      ];
+
+      const metrics = metricsCalculator.calculateMetrics(
+        matchedPairs,
+        0,
+        0,
+        0,
+        2,
+        2,
+      );
+
+      expect(metrics.countDiff).to.equal(0);
+      expect(metrics.coverage).to.equal(100);
+      expect(metrics.contentMismatchRate).to.equal(0);
+      expect(metrics.chatMissingCount).to.equal(0);
+      expect(metrics.pubnubMissingCount).to.equal(0);
+    });
+
+    it('should handle zero pubnub messages edge case', () => {
+      const metrics = metricsCalculator.calculateMetrics(
+        [],
+        0,
+        5,
+        0,
+        0,
+        5,
+      );
+
+      expect(metrics.countDiff).to.equal(5);
+      expect(metrics.coverage).to.equal(100);
+      expect(metrics.contentMismatchRate).to.equal(0);
+      expect(metrics.chatMissingCount).to.equal(0);
+      expect(metrics.pubnubMissingCount).to.equal(5);
+    });
+
+    it('should round coverage and content mismatch rate to 2 decimal places', () => {
+      const matchedPairs: MessagePair[] = [
+        {
+          pubnubMsg: { timetoken: '16094592000000000' },
+          chatMsg: { createdAt: 1609459200000 },
+        },
+        {
+          pubnubMsg: { timetoken: '16094592010000000' },
+          chatMsg: { createdAt: 1609459201000 },
+        },
+        {
+          pubnubMsg: { timetoken: '16094592020000000' },
           chatMsg: { createdAt: 1609459202000 },
         },
       ];
 
-      const result = metricsCalculator.calculateLatencyDifferences(matchedPairs);
+      const metrics = metricsCalculator.calculateMetrics(
+        matchedPairs,
+        0,
+        0,
+        1,
+        300,
+        300,
+      );
 
-      expect(result.avg).to.be.greaterThan(0);
-      expect(result.max).to.be.greaterThan(0);
-      expect(result.min).to.be.greaterThan(0);
-      expect(result.median).to.be.greaterThan(0);
-      expect(result.differences).to.have.lengthOf(2);
+      expect(metrics.coverage).to.be.a('number');
+      expect(metrics.contentMismatchRate).to.be.a('number');
+      expect(metrics.coverage.toString().split('.')[1]?.length || 0).to.be.lessThanOrEqual(2);
+      expect(metrics.contentMismatchRate.toString().split('.')[1]?.length || 0).to.be.lessThanOrEqual(2);
     });
 
-    it('should handle messages without timestamps', () => {
+    it('should handle messages without timestamps gracefully', () => {
       const matchedPairs: MessagePair[] = [
         {
           pubnubMsg: {},
@@ -73,103 +153,43 @@ describe('MetricsCalculator', () => {
         },
       ];
 
-      const result = metricsCalculator.calculateLatencyDifferences(matchedPairs);
+      const metrics = metricsCalculator.calculateMetrics(
+        matchedPairs,
+        0,
+        0,
+        0,
+        1,
+        1,
+      );
 
-      expect(result).to.deep.equal({
-        avg: 0,
-        max: 0,
-        min: 0,
-        median: 0,
-        differences: [],
-      });
+      expect(metrics.avgLatencyDiff).to.equal(0);
+      expect(metrics.maxLatencyDiff).to.equal(0);
     });
 
-    it('should extract timestamp from message.createdAt', () => {
-      const matchedPairs: MessagePair[] = [
-        {
-          pubnubMsg: { createdAt: 1000 },
-          chatMsg: { createdAt: 2000 },
-        },
-      ];
+    it('should calculate realistic comparison scenario', () => {
+      const matchedPairs: MessagePair[] = [];
+      for (let i = 0; i < 95; i++) {
+        matchedPairs.push({
+          pubnubMsg: { timetoken: `${1609459200000 + i * 1000}0000000` },
+          chatMsg: { createdAt: 1609459200000 + i * 1000 + 50 },
+        });
+      }
 
-      const result = metricsCalculator.calculateLatencyDifferences(matchedPairs);
+      const metrics = metricsCalculator.calculateMetrics(
+        matchedPairs,
+        5,
+        2,
+        3,
+        100,
+        97,
+      );
 
-      expect(result.differences).to.have.lengthOf(1);
-      expect(result.differences[0]).to.equal(1000);
-    });
-
-    it('should extract timestamp from nested message.createdAt', () => {
-      const matchedPairs: MessagePair[] = [
-        {
-          pubnubMsg: { message: { createdAt: 1000 } },
-          chatMsg: { message: { createdAt: 2000 } },
-        },
-      ];
-
-      const result = metricsCalculator.calculateLatencyDifferences(matchedPairs);
-
-      expect(result.differences).to.have.lengthOf(1);
-    });
-  });
-
-  describe('calculateCoverage', () => {
-    it('should return 100 when pubnubTotalCount is 0', () => {
-      const result = metricsCalculator.calculateCoverage(0, 0);
-
-      expect(result).to.equal(100);
-    });
-
-    it('should calculate coverage correctly', () => {
-      const result = metricsCalculator.calculateCoverage(80, 100);
-
-      expect(result).to.equal(80);
-    });
-
-    it('should handle zero matched count', () => {
-      const result = metricsCalculator.calculateCoverage(0, 100);
-
-      expect(result).to.equal(0);
+      expect(metrics.countDiff).to.equal(3);
+      expect(metrics.coverage).to.equal(95);
+      expect(metrics.contentMismatchRate).to.equal(3.16);
+      expect(metrics.chatMissingCount).to.equal(5);
+      expect(metrics.pubnubMissingCount).to.equal(2);
+      expect(metrics.avgLatencyDiff).to.be.greaterThan(0);
     });
   });
-
-  describe('calculateContentMismatchRate', () => {
-    it('should return 0 when matchedCount is 0', () => {
-      const result = metricsCalculator.calculateContentMismatchRate(5, 0);
-
-      expect(result).to.equal(0);
-    });
-
-    it('should calculate mismatch rate correctly', () => {
-      const result = metricsCalculator.calculateContentMismatchRate(5, 100);
-
-      expect(result).to.equal(5);
-    });
-
-    it('should handle zero mismatches', () => {
-      const result = metricsCalculator.calculateContentMismatchRate(0, 100);
-
-      expect(result).to.equal(0);
-    });
-  });
-
-  describe('calculateMessageCountDiscrepancy', () => {
-    it('should calculate absolute difference', () => {
-      const result = metricsCalculator.calculateMessageCountDiscrepancy(100, 80);
-
-      expect(result).to.equal(20);
-    });
-
-    it('should handle reverse order', () => {
-      const result = metricsCalculator.calculateMessageCountDiscrepancy(80, 100);
-
-      expect(result).to.equal(20);
-    });
-
-    it('should return 0 for equal counts', () => {
-      const result = metricsCalculator.calculateMessageCountDiscrepancy(100, 100);
-
-      expect(result).to.equal(0);
-    });
-  });
-
 });

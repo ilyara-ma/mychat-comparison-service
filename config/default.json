@@ -124,25 +124,13 @@
     "clientName": "teamsRdsClient",
     "provider": "mysql"
   },
-  "teamDiscoveryService": {
-    "teamsDAL": {
-      "clientName": "teamsRdsClient",
-      "provider": "mysql"
-    },
-    "comparisonScheduler": {
-      "enabled": true,
-      "teamDiscoveryIntervalMinutes": 30,
-      "pollingIntervalMinutes": 15,
-      "pollingTimeWindowMinutes": 20,
-      "batchSize": 50,
-      "maxMessagesPerFetch": 100,
-      "teamIdsOverride": []
-    }
+  "teamsDAL": {
+    "clientName": "teamsRdsClient",
+    "provider": "mysql"
   },
   "comparisonScheduler": {
     "comparisonScheduler": {
       "enabled": true,
-      "teamDiscoveryIntervalMinutes": 30,
       "pollingIntervalMinutes": 15,
       "pollingTimeWindowMinutes": 20,
       "batchSize": 50,
@@ -157,17 +145,6 @@
       "coveragePercentageMin": 90,
       "latencyDiffMsMax": 5000,
       "apiFailureRatePercent": 5
-    }
-  },
-  "messageFetcherService": {
-    "comparisonScheduler": {
-      "enabled": true,
-      "teamDiscoveryIntervalMinutes": 30,
-      "pollingIntervalMinutes": 15,
-      "pollingTimeWindowMinutes": 20,
-      "batchSize": 50,
-      "maxMessagesPerFetch": 100,
-      "teamIdsOverride": []
     }
   },
   "metricsEmitter": {

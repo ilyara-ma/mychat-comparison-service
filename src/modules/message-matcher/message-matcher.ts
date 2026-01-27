@@ -9,31 +9,13 @@ class MessageMatcher {
 
   private alerts: IAlerts;
 
-  private fuzzyMatcher: FuzzyMatcher | null;
+  private fuzzyMatcher: FuzzyMatcher;
 
   constructor(params: ModuleParams) {
     const { services } = params;
     this.logger = services.loggerManager.getLogger('message-matcher');
     this.alerts = services.alerts;
-    this.fuzzyMatcher = null;
-  }
-
-  public async init(): Promise<void> {
-    this.logger.info('Initializing Message Matcher');
     this.fuzzyMatcher = new FuzzyMatcher(this.logger);
-    this.logger.info('Message Matcher initialized successfully');
-  }
-
-  public async postInit(): Promise<void> {
-    // Empty implementation
-  }
-
-  public async deepHealth(): Promise<void> {
-    // Empty implementation
-  }
-
-  public async destroy(): Promise<void> {
-    // Empty implementation
   }
 
   public matchMessages(pubnubMessages: PubnubMessage[], chatServiceMessages: ChatMessage[]): MatchResult {

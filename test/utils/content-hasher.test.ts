@@ -48,28 +48,4 @@ describe('ContentHasher', () => {
       expect(hash).to.be.null;
     });
   });
-
-  describe('normalizeContent', () => {
-    it('should sort object keys', () => {
-      const content1 = { b: '2', a: '1' };
-      const content2 = { a: '1', b: '2' };
-
-      const normalized1 = contentHasher.normalizeContent(content1);
-      const normalized2 = contentHasher.normalizeContent(content2);
-
-      expect(JSON.stringify(normalized1)).to.equal(JSON.stringify(normalized2));
-    });
-
-    it('should remove metadata fields', () => {
-      const content = {
-        text: 'hello',
-        metadata: { pubnubTimetoken: '12345' },
-      };
-
-      const normalized = contentHasher.normalizeContent(content) as Record<string, unknown>;
-
-      expect(normalized.metadata).to.be.undefined;
-      expect(normalized.text).to.equal('hello');
-    });
-  });
 });

@@ -1,5 +1,5 @@
 import { ILogger } from '../../types';
-import { LatencyMetrics, MessagePair } from './types';
+import { ComparisonMetrics, LatencyMetrics, MessagePair } from './types';
 
 class MetricsCalculator {
   private logger: ILogger;
@@ -8,7 +8,32 @@ class MetricsCalculator {
     this.logger = logger;
   }
 
-  public calculateLatencyDifferences(matchedPairs: MessagePair[]): LatencyMetrics {
+  public calculateMetrics(
+    matchedPairs: MessagePair[],
+    pubnubOnlyCount: number,
+    chatServiceOnlyCount: number,
+    contentMismatchCount: number,
+    pubnubTotalCount: number,
+    chatServiceTotalCount: number,
+  ): ComparisonMetrics {
+    const latencyDiffs = this._calculateLatencyDifferences(matchedPairs);
+    const countDiff = this._calculateMessageCountDiscrepancy(pubnubTotalCount, chatServiceTotalCount);
+    const coverage = this._calculateCoverage(matchedPairs.length, pubnubTotalCount);
+    const contentMismatchRate = this._calculateContentMismatchRate(contentMismatchCount, matchedPairs.length);
+
+    return {
+      countDiff,
+      contentMismatchRate: Math.round(contentMismatchRate * 100) / 100,
+      orderingViolations: 0,
+      coverage: Math.round(coverage * 100) / 100,
+      avgLatencyDiff: latencyDiffs.avg,
+      maxLatencyDiff: latencyDiffs.max,
+      chatMissingCount: pubnubOnlyCount,
+      pubnubMissingCount: chatServiceOnlyCount,
+    };
+  }
+
+  private _calculateLatencyDifferences(matchedPairs: MessagePair[]): LatencyMetrics {
     if (!matchedPairs || matchedPairs.length === 0) {
       return {
         avg: 0,
@@ -58,7 +83,7 @@ class MetricsCalculator {
     };
   }
 
-  public calculateCoverage(matchedCount: number, pubnubTotalCount: number): number {
+  private _calculateCoverage(matchedCount: number, pubnubTotalCount: number): number {
     if (pubnubTotalCount === 0) {
       return 100;
     }
@@ -66,7 +91,7 @@ class MetricsCalculator {
     return (matchedCount / pubnubTotalCount) * 100;
   }
 
-  public calculateContentMismatchRate(contentMismatchCount: number, matchedCount: number): number {
+  private _calculateContentMismatchRate(contentMismatchCount: number, matchedCount: number): number {
     if (matchedCount === 0) {
       return 0;
     }
@@ -74,7 +99,7 @@ class MetricsCalculator {
     return (contentMismatchCount / matchedCount) * 100;
   }
 
-  public calculateMessageCountDiscrepancy(pubnubCount: number, chatServiceCount: number): number {
+  private _calculateMessageCountDiscrepancy(pubnubCount: number, chatServiceCount: number): number {
     return Math.abs(pubnubCount - chatServiceCount);
   }
 

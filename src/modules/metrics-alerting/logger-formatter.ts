@@ -8,47 +8,8 @@ class LoggerFormatter {
     this.logger = logger;
   }
 
-  public formatComparisonResult(comparisonResult: ComparisonResult): Record<string, unknown> {
-    const {
-      teamId, channelId, timestamp, metrics, details, skipped,
-    } = comparisonResult;
-
-    if (skipped) {
-      return {
-        teamId,
-        channelId,
-        timestamp,
-        skipped: true,
-        reason: comparisonResult.reason,
-      };
-    }
-
-    return {
-      teamId,
-      channelId,
-      timestamp,
-      metrics: {
-        message_count_discrepancy: metrics.countDiff,
-        content_mismatch_rate_percent: metrics.contentMismatchRate,
-        ordering_violations: metrics.orderingViolations,
-        coverage_percent: metrics.coverage,
-        avg_latency_diff_ms: metrics.avgLatencyDiff,
-        max_latency_diff_ms: metrics.maxLatencyDiff,
-        chat_missing_messages: metrics.chatMissingCount,
-        pubnub_missing_messages: metrics.pubnubMissingCount,
-      },
-      summary: {
-        total_pubnub_messages: details?.totalPubnubMessages || 0,
-        total_chatservice_messages: details?.totalChatServiceMessages || 0,
-        matched_messages: details?.matchedCount || 0,
-        content_mismatches: details?.contentMismatchCount || 0,
-        ordering_violations: details?.orderingViolationCount || 0,
-      },
-    };
-  }
-
   public logComparisonResult(comparisonResult: ComparisonResult): void {
-    const formatted = this.formatComparisonResult(comparisonResult);
+    const formatted = this._formatComparisonResult(comparisonResult);
 
     if (formatted.skipped) {
       this.logger.warn('Comparison skipped', formatted);
@@ -88,6 +49,45 @@ class LoggerFormatter {
         samples: orderingViolations.slice(0, 3),
       });
     }
+  }
+
+  private _formatComparisonResult(comparisonResult: ComparisonResult): Record<string, unknown> {
+    const {
+      teamId, channelId, timestamp, metrics, details, skipped,
+    } = comparisonResult;
+
+    if (skipped) {
+      return {
+        teamId,
+        channelId,
+        timestamp,
+        skipped: true,
+        reason: comparisonResult.reason,
+      };
+    }
+
+    return {
+      teamId,
+      channelId,
+      timestamp,
+      metrics: {
+        message_count_discrepancy: metrics.countDiff,
+        content_mismatch_rate_percent: metrics.contentMismatchRate,
+        ordering_violations: metrics.orderingViolations,
+        coverage_percent: metrics.coverage,
+        avg_latency_diff_ms: metrics.avgLatencyDiff,
+        max_latency_diff_ms: metrics.maxLatencyDiff,
+        chat_missing_messages: metrics.chatMissingCount,
+        pubnub_missing_messages: metrics.pubnubMissingCount,
+      },
+      summary: {
+        total_pubnub_messages: details?.totalPubnubMessages || 0,
+        total_chatservice_messages: details?.totalChatServiceMessages || 0,
+        matched_messages: details?.matchedCount || 0,
+        content_mismatches: details?.contentMismatchCount || 0,
+        ordering_violations: details?.orderingViolationCount || 0,
+      },
+    };
   }
 }
 
