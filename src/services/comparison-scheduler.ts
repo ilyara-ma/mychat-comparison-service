@@ -1,11 +1,12 @@
+import { ComparisonResult } from '../modules/comparison-engine/types';
 import {
-  IAlerts, IFeatureConfigClient, ILogger, ModuleParams, SchedulerConfig,
+  FetchResult, IAlerts, IFeatureConfigClient, ILogger, ModuleParams, SchedulerConfig,
 } from '../types';
 import {
-  IComparisonEngine, IMessageFetcherService, IMetricsEmitter, ITeamDiscoveryService,
+  IComparisonEngine, IComparisonScheduler, IMessageFetcherService, IMetricsEmitter, ITeamDiscoveryService,
 } from './types';
 
-class ComparisonScheduler {
+class ComparisonScheduler implements IComparisonScheduler {
   private services: ModuleParams['services'];
 
   private config: Record<string, unknown>;
@@ -125,7 +126,7 @@ class ComparisonScheduler {
     this.logger.info('Comparison Scheduler stopped');
   }
 
-  public async runManualComparison(teamIds?: string[], channelIds?: string[]): Promise<unknown[]> {
+  public async runManualComparison(teamIds?: string[], channelIds?: string[]): Promise<ComparisonResult[]> {
     const timeWindow = this.messageFetcherService!.calculateTimeWindow(
       this.schedulerConfig.pollingIntervalMinutes,
       5,
@@ -133,7 +134,7 @@ class ComparisonScheduler {
 
     if (channelIds && channelIds.length > 0) {
       this.logger.info('Running manual comparison for specified channels', { channelIds, channelCount: channelIds.length });
-      const comparisonResults: unknown[] = [];
+      const comparisonResults: ComparisonResult[] = [];
 
       for (const channelId of channelIds) {
         const fetchResult = await this.messageFetcherService!.fetchMessagesByChannelId(channelId, timeWindow);
@@ -161,7 +162,7 @@ class ComparisonScheduler {
     }
 
     const fetchResults = await this.messageFetcherService!.fetchMessagesForTeams(teams, timeWindow);
-    const comparisonResults: unknown[] = [];
+    const comparisonResults: ComparisonResult[] = [];
 
     for (const fetchResult of fetchResults) {
       const comparisonResult = await this._compareTeam(fetchResult);
@@ -266,8 +267,8 @@ class ComparisonScheduler {
     }
   }
 
-  private async _compareAllTeams(fetchResults: unknown[]): Promise<unknown[]> {
-    const comparisonResults: unknown[] = [];
+  private async _compareAllTeams(fetchResults: FetchResult[]): Promise<ComparisonResult[]> {
+    const comparisonResults: ComparisonResult[] = [];
 
     for (const fetchResult of fetchResults) {
       const result = await this._compareTeam(fetchResult);
@@ -279,7 +280,7 @@ class ComparisonScheduler {
     return comparisonResults;
   }
 
-  private async _compareTeam(fetchResult: unknown): Promise<unknown | null> {
+  private async _compareTeam(fetchResult: FetchResult): Promise<ComparisonResult | null> {
     try {
       const comparisonResult = await this.comparisonEngine!.compare(fetchResult);
       this.metricsEmitter!.emitComparisonMetrics(comparisonResult);

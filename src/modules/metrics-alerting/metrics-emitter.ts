@@ -1,3 +1,4 @@
+import { IMetricsEmitter } from '../../services/types';
 import {
   IAlerts, IFeatureConfigClient, ILogger, ModuleParams, ThresholdsConfig,
 } from '../../types';
@@ -5,9 +6,7 @@ import AlertManager from './alert-manager';
 import LoggerFormatter from './logger-formatter';
 import { ComparisonResult } from './types';
 
-class MetricsEmitter {
-  private services: ModuleParams['services'];
-
+class MetricsEmitter implements IMetricsEmitter {
   private config: Record<string, unknown>;
 
   private logger: ILogger;
@@ -24,7 +23,6 @@ class MetricsEmitter {
 
   constructor(params: ModuleParams) {
     const { services, config } = params;
-    this.services = services;
     this.config = config || {};
     this.logger = services.loggerManager.getLogger('metrics-emitter');
     this.alerts = services.alerts;

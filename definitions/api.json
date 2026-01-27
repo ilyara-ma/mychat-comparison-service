@@ -20,7 +20,7 @@
     "/api/v1/comparison/run": {
       "post": {
         "summary": "Run on-demand comparison",
-        "description": "Triggers a comparison between PubNub and Chat Service for specified teams or all cached teams",
+        "description": "Triggers a comparison between PubNub and Chat Service for specified teams/channels or all cached teams. Either teamIds or channelIds can be provided, or both can be omitted to compare all cached teams.",
         "tags": [
           "comparison"
         ],
@@ -34,9 +34,16 @@
             "type": "string"
           },
           {
+            "name": "channelIds",
+            "in": "query",
+            "description": "Comma-separated list of channel IDs or array of channel IDs. If provided, team discovery is skipped and messages are fetched directly for these channels.",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "body",
             "in": "body",
-            "description": "Request body with optional team IDs",
+            "description": "Request body with optional team IDs and/or channel IDs",
             "required": false,
             "schema": {
               "$ref": "#/definitions/ComparisonRequest"
@@ -69,7 +76,14 @@
           "items": {
             "type": "string"
           },
-          "description": "Array of team IDs to compare. If not provided, all cached teams will be compared"
+          "description": "Array of team IDs to compare. If not provided and channelIds is also not provided, all cached teams will be compared"
+        },
+        "channelIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of channel IDs to compare directly. If provided, team discovery is skipped and messages are fetched directly for these channels"
         }
       }
     },
@@ -84,6 +98,10 @@
           "type": "integer",
           "description": "Number of teams that were compared"
         },
+        "channelCount": {
+          "type": "integer",
+          "description": "Number of channels that were compared directly"
+        },
         "comparisonCount": {
           "type": "integer",
           "description": "Number of comparison results returned"
@@ -93,12 +111,13 @@
           "items": {
             "$ref": "#/definitions/ComparisonResult"
           },
-          "description": "Array of comparison results for each team"
+          "description": "Array of comparison results for each team/channel"
         }
       },
       "required": [
         "success",
         "teamCount",
+        "channelCount",
         "comparisonCount",
         "results"
       ]
@@ -108,39 +127,180 @@
       "properties": {
         "teamId": {
           "type": "string",
-          "description": "The team ID that was compared"
+          "description": "The team ID that was compared (or channel ID if channelIds were provided)"
         },
         "channelId": {
           "type": "string",
           "description": "The channel ID for the team"
         },
+        "timestamp": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Timestamp when the comparison was performed"
+        },
         "metrics": {
-          "type": "object",
-          "description": "Comparison metrics",
-          "properties": {
-            "messageCountDiscrepancy": {
-              "type": "integer",
-              "description": "Absolute difference in message counts between systems"
-            },
-            "contentMismatchRate": {
-              "type": "number",
-              "description": "Percentage of messages with content mismatches"
-            },
-            "orderingViolations": {
-              "type": "integer",
-              "description": "Number of ordering violations detected"
-            },
-            "coveragePercentage": {
-              "type": "number",
-              "description": "Coverage percentage of Chat vs PubNub"
-            },
-            "latencyDiffMs": {
-              "type": "number",
-              "description": "Average latency difference in milliseconds"
-            }
-          }
+          "$ref": "#/definitions/ComparisonMetrics",
+          "description": "Comparison metrics"
+        },
+        "details": {
+          "$ref": "#/definitions/ComparisonDetails",
+          "description": "Detailed comparison information"
+        },
+        "contentMismatches": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "description": "Array of content mismatches found (limited to first 10)"
+        },
+        "orderingViolations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrderingViolation"
+          },
+          "description": "Array of ordering violations found (limited to first 10)"
+        },
+        "skipped": {
+          "type": "boolean",
+          "description": "Whether the comparison was skipped due to fetch failures"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason why comparison was skipped (if applicable)",
+          "enum": [
+            "both_systems_failed",
+            "pubnub_failed",
+            "chatservice_failed"
+          ]
         }
-      }
+      },
+      "required": [
+        "teamId",
+        "channelId",
+        "timestamp",
+        "metrics"
+      ]
+    },
+    "ComparisonMetrics": {
+      "type": "object",
+      "properties": {
+        "countDiff": {
+          "type": "integer",
+          "description": "Absolute difference in message counts between systems"
+        },
+        "contentMismatchRate": {
+          "type": "number",
+          "description": "Percentage of messages with content mismatches"
+        },
+        "orderingViolations": {
+          "type": "integer",
+          "description": "Number of ordering violations detected"
+        },
+        "coverage": {
+          "type": "number",
+          "description": "Coverage percentage of Chat vs PubNub"
+        },
+        "avgLatencyDiff": {
+          "type": "number",
+          "description": "Average latency difference in milliseconds"
+        },
+        "maxLatencyDiff": {
+          "type": "number",
+          "description": "Maximum latency difference in milliseconds"
+        },
+        "chatMissingCount": {
+          "type": "integer",
+          "description": "Number of messages present in PubNub but missing in Chat Service"
+        },
+        "pubnubMissingCount": {
+          "type": "integer",
+          "description": "Number of messages present in Chat Service but missing in PubNub"
+        }
+      },
+      "required": [
+        "countDiff",
+        "contentMismatchRate",
+        "orderingViolations",
+        "coverage",
+        "avgLatencyDiff",
+        "maxLatencyDiff",
+        "chatMissingCount",
+        "pubnubMissingCount"
+      ]
+    },
+    "ComparisonDetails": {
+      "type": "object",
+      "properties": {
+        "totalPubnubMessages": {
+          "type": "integer",
+          "description": "Total number of messages fetched from PubNub"
+        },
+        "totalChatServiceMessages": {
+          "type": "integer",
+          "description": "Total number of messages fetched from Chat Service"
+        },
+        "matchedCount": {
+          "type": "integer",
+          "description": "Number of messages successfully matched between systems"
+        },
+        "contentMismatchCount": {
+          "type": "integer",
+          "description": "Number of matched messages with content differences"
+        },
+        "orderingViolationCount": {
+          "type": "integer",
+          "description": "Number of ordering violations detected"
+        }
+      },
+      "required": [
+        "totalPubnubMessages",
+        "totalChatServiceMessages",
+        "matchedCount",
+        "contentMismatchCount",
+        "orderingViolationCount"
+      ]
+    },
+    "OrderingViolation": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "description": "Index of the violation in the matched pairs array"
+        },
+        "prevPubnubTimetoken": {
+          "type": "string",
+          "description": "Previous PubNub message timetoken"
+        },
+        "currPubnubTimetoken": {
+          "type": "string",
+          "description": "Current PubNub message timetoken"
+        },
+        "prevChatOffset": {
+          "type": "integer",
+          "description": "Previous Chat Service message offset"
+        },
+        "currChatOffset": {
+          "type": "integer",
+          "description": "Current Chat Service message offset"
+        },
+        "pubnubOrder": {
+          "type": "integer",
+          "description": "Order of messages in PubNub"
+        },
+        "chatOrder": {
+          "type": "integer",
+          "description": "Order of messages in Chat Service"
+        }
+      },
+      "required": [
+        "index",
+        "prevPubnubTimetoken",
+        "currPubnubTimetoken",
+        "prevChatOffset",
+        "currChatOffset",
+        "pubnubOrder",
+        "chatOrder"
+      ]
     },
     "ErrorResponse": {
       "type": "object",

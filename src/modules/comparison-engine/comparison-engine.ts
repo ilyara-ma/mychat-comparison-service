@@ -1,4 +1,5 @@
-import { IAlerts, ILogger, ModuleParams } from '../../types';
+import { IComparisonEngine } from '../../services/types';
+import { ILogger, ModuleParams } from '../../types';
 import ContentComparator from './content-comparator';
 import MetricsCalculator from './metrics-calculator';
 import OrderingValidator from './ordering-validator';
@@ -8,14 +9,10 @@ import {
   MatchResult,
 } from './types';
 
-class ComparisonEngine {
+class ComparisonEngine implements IComparisonEngine {
   private services: ModuleParams['services'];
 
-  private config: Record<string, unknown>;
-
   private logger: ILogger;
-
-  private alerts: IAlerts;
 
   private messageMatcher: { matchMessages: (p: unknown[], c: unknown[]) => MatchResult } | null;
 
@@ -26,11 +23,9 @@ class ComparisonEngine {
   private metricsCalculator: MetricsCalculator | null;
 
   constructor(params: ModuleParams) {
-    const { services, config } = params;
+    const { services } = params;
     this.services = services;
-    this.config = config || {};
     this.logger = services.loggerManager.getLogger('comparison-engine');
-    this.alerts = services.alerts;
     this.messageMatcher = null;
     this.contentComparator = null;
     this.orderingValidator = null;

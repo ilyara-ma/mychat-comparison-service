@@ -10,13 +10,11 @@ describe('DualRealtimeCommunicator', () => {
     init: sinon.SinonStub;
     destroy: sinon.SinonStub;
     fetchAllMessages: sinon.SinonStub;
-    fetchLastMessagesByCount: sinon.SinonStub;
   };
   let chatServiceCommunicatorStub: {
     init: sinon.SinonStub;
     destroy: sinon.SinonStub;
     fetchAllMessages: sinon.SinonStub;
-    fetchLastMessagesByCount: sinon.SinonStub;
   };
   let services: Partial<IServices>;
   let config: Record<string, unknown>;
@@ -26,14 +24,12 @@ describe('DualRealtimeCommunicator', () => {
       init: sinon.stub().resolves(),
       destroy: sinon.stub().resolves(),
       fetchAllMessages: sinon.stub().resolves({ success: true, value: [] }),
-      fetchLastMessagesByCount: sinon.stub().resolves({ success: true, value: [] }),
     };
 
     chatServiceCommunicatorStub = {
       init: sinon.stub().resolves(),
       destroy: sinon.stub().resolves(),
       fetchAllMessages: sinon.stub().resolves({ success: true, value: [] }),
-      fetchLastMessagesByCount: sinon.stub().resolves({ success: true, value: [] }),
     };
 
     realtimeCommunicationsServiceStub = sinon.stub();
@@ -123,54 +119,6 @@ describe('DualRealtimeCommunicator', () => {
       await dualCommunicator.init();
 
       const result = await dualCommunicator.fetchMessagesFromBothSystems('channel_1', {});
-
-      expect(result.pubnubSuccess).to.be.true;
-      expect(result.chatServiceSuccess).to.be.false;
-      expect(result.chatServiceMessages).to.deep.equal([]);
-    });
-  });
-
-  describe('fetchLastMessagesByCount', () => {
-    it('should fetch last N messages from both systems successfully', async () => {
-      const pubnubMessages = [{ timetoken: '123', message: 'test1' }];
-      const chatMessages = [{ id: '1', content: 'test1' }];
-
-      pubnubCommunicatorStub.fetchLastMessagesByCount.resolves({ success: true, value: pubnubMessages });
-      chatServiceCommunicatorStub.fetchLastMessagesByCount.resolves({ success: true, value: chatMessages });
-
-      const dualCommunicator = new DualRealtimeCommunicator({ services: services as IServices, config });
-      await dualCommunicator.init();
-
-      const result = await dualCommunicator.fetchLastMessagesByCount(10, 'channel_1', {});
-
-      expect(result.pubnubMessages).to.deep.equal(pubnubMessages);
-      expect(result.chatServiceMessages).to.deep.equal(chatMessages);
-      expect(result.pubnubSuccess).to.be.true;
-      expect(result.chatServiceSuccess).to.be.true;
-    });
-
-    it('should handle pubnub failure in fetchLastMessagesByCount', async () => {
-      pubnubCommunicatorStub.fetchLastMessagesByCount.rejects(new Error('PubNub error'));
-      chatServiceCommunicatorStub.fetchLastMessagesByCount.resolves({ success: true, value: [] });
-
-      const dualCommunicator = new DualRealtimeCommunicator({ services: services as IServices, config });
-      await dualCommunicator.init();
-
-      const result = await dualCommunicator.fetchLastMessagesByCount(10, 'channel_1', {});
-
-      expect(result.pubnubSuccess).to.be.false;
-      expect(result.chatServiceSuccess).to.be.true;
-      expect(result.pubnubMessages).to.deep.equal([]);
-    });
-
-    it('should handle chatService failure in fetchLastMessagesByCount', async () => {
-      pubnubCommunicatorStub.fetchLastMessagesByCount.resolves({ success: true, value: [] });
-      chatServiceCommunicatorStub.fetchLastMessagesByCount.rejects(new Error('ChatService error'));
-
-      const dualCommunicator = new DualRealtimeCommunicator({ services: services as IServices, config });
-      await dualCommunicator.init();
-
-      const result = await dualCommunicator.fetchLastMessagesByCount(10, 'channel_1', {});
 
       expect(result.pubnubSuccess).to.be.true;
       expect(result.chatServiceSuccess).to.be.false;

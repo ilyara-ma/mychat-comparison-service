@@ -1,10 +1,11 @@
+import { IMessageFetcherService } from '../../services/types';
 import {
   FetchResult, IAlerts, ILogger, ModuleParams, Team, TimeWindow,
 } from '../../types';
 import BatchProcessor from './batch-processor';
 import { IDualRealtimeCommunicator } from './types';
 
-class MessageFetcherService {
+class MessageFetcherService implements IMessageFetcherService {
   private services: ModuleParams['services'];
 
   private config: Record<string, unknown>;

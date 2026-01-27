@@ -1,7 +1,8 @@
+import { IDualRealtimeCommunicator } from '../modules/message-fetcher/types';
 import { IAlerts, ILogger, ModuleParams } from '../types';
 import { IRealtimeCommunicationsService } from './types';
 
-class DualRealtimeCommunicator {
+class DualRealtimeCommunicator implements IDualRealtimeCommunicator {
   private services: ModuleParams['services'];
 
   private config: Record<string, unknown>;
@@ -109,32 +110,6 @@ class DualRealtimeCommunicator {
 
     const duration = Date.now() - startTime;
     this.alerts.gauge('chat_comparison.fetch_duration_ms', { channel }, duration);
-
-    return {
-      pubnubMessages: pubnubSuccess ? (pubnubResult.value.value || []) as unknown[] : [],
-      chatServiceMessages: chatServiceSuccess ? (chatServiceResult.value.value || []) as unknown[] : [],
-      pubnubSuccess,
-      chatServiceSuccess,
-    };
-  }
-
-  public async fetchLastMessagesByCount(
-    count: number,
-    channel: string,
-    options: Record<string, unknown> = {},
-  ): Promise<{
-      pubnubMessages: unknown[];
-      chatServiceMessages: unknown[];
-      pubnubSuccess: boolean;
-      chatServiceSuccess: boolean;
-    }> {
-    const [pubnubResult, chatServiceResult] = await Promise.allSettled([
-      this.pubnubCommunicator!.fetchLastMessagesByCount(count, channel, options),
-      this.chatServiceCommunicator!.fetchLastMessagesByCount(count, channel, options),
-    ]);
-
-    const pubnubSuccess = pubnubResult.status === 'fulfilled' && pubnubResult.value.success;
-    const chatServiceSuccess = chatServiceResult.status === 'fulfilled' && chatServiceResult.value.success;
 
     return {
       pubnubMessages: pubnubSuccess ? (pubnubResult.value.value || []) as unknown[] : [],

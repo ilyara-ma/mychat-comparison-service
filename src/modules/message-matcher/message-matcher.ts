@@ -5,10 +5,6 @@ import {
 } from './types';
 
 class MessageMatcher {
-  private services: ModuleParams['services'];
-
-  private config: Record<string, unknown>;
-
   private logger: ILogger;
 
   private alerts: IAlerts;
@@ -16,9 +12,7 @@ class MessageMatcher {
   private fuzzyMatcher: FuzzyMatcher | null;
 
   constructor(params: ModuleParams) {
-    const { services, config } = params;
-    this.services = services;
-    this.config = config || {};
+    const { services } = params;
     this.logger = services.loggerManager.getLogger('message-matcher');
     this.alerts = services.alerts;
     this.fuzzyMatcher = null;

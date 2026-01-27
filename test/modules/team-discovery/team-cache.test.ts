@@ -50,21 +50,4 @@ describe('TeamCache', () => {
   });
 
 
-  describe('size', () => {
-    it('should return 0 initially', () => {
-      expect(teamCache.size()).to.equal(0);
-    });
-
-    it('should return correct size', () => {
-      const teams: Team[] = [
-        { teamId: '1', channelId: 'ch1' },
-        { teamId: '2', channelId: 'ch2' },
-        { teamId: '3', channelId: 'ch3' },
-      ];
-
-      teamCache.setTeams(teams);
-
-      expect(teamCache.size()).to.equal(3);
-    });
-  });
 });

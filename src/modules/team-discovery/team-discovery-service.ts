@@ -1,3 +1,4 @@
+import { ITeamDiscoveryService } from '../../services/types';
 import {
   IAlerts, IFeatureConfigClient, ILogger, ModuleParams, Team,
 } from '../../types';
@@ -5,7 +6,7 @@ import TeamCache from './team-cache';
 import TeamScanner from './team-scanner';
 import { ITeamsDAL } from './types';
 
-class TeamDiscoveryService {
+class TeamDiscoveryService implements ITeamDiscoveryService {
   private services: ModuleParams['services'];
 
   private config: Record<string, unknown>;
@@ -22,8 +23,6 @@ class TeamDiscoveryService {
 
   private teamCache: TeamCache;
 
-  private discoveryInterval: NodeJS.Timeout | null;
-
   constructor(params: ModuleParams) {
     const { services, config } = params;
     this.services = services;
@@ -34,7 +33,6 @@ class TeamDiscoveryService {
     this.teamsDAL = null;
     this.teamScanner = null;
     this.teamCache = new TeamCache();
-    this.discoveryInterval = null;
   }
 
   public async init(): Promise<void> {
@@ -64,9 +62,6 @@ class TeamDiscoveryService {
   }
 
   public async destroy(): Promise<void> {
-    if (this.discoveryInterval) {
-      clearInterval(this.discoveryInterval);
-    }
     if (this.teamsDAL) {
       await this.teamsDAL.destroy();
     }

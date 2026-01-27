@@ -1,3 +1,6 @@
+import { ComparisonResult } from '../modules/comparison-engine/types';
+import { FetchResult } from '../types';
+
 export interface IRealtimeCommunicationsService {
   init: () => Promise<void>;
   destroy: () => Promise<void>;
@@ -29,11 +32,11 @@ export interface IMessageFetcherService {
   fetchMessagesForTeams: (
     teams: Array<{ teamId: string; channelId: string }>,
     timeWindow: { fromTimestamp: number; toTimestamp: number }
-  ) => Promise<unknown[]>;
+  ) => Promise<FetchResult[]>;
   fetchMessagesByChannelId: (
     channelId: string,
     timeWindow: { fromTimestamp: number; toTimestamp: number }
-  ) => Promise<unknown>;
+  ) => Promise<FetchResult>;
   calculateTimeWindow: (
     pollingIntervalMinutes: number,
     bufferMinutes: number
@@ -41,14 +44,14 @@ export interface IMessageFetcherService {
 }
 
 export interface IComparisonEngine {
-  compare: (fetchResult: unknown) => Promise<unknown>;
+  compare: (fetchResult: FetchResult) => Promise<ComparisonResult>;
 }
 
 export interface IMetricsEmitter {
-  emitComparisonMetrics: (comparisonResult: unknown) => void;
-  emitBatchSummary: (comparisonResults: unknown[]) => void;
+  emitComparisonMetrics: (comparisonResult: ComparisonResult) => void;
+  emitBatchSummary: (comparisonResults: ComparisonResult[]) => void;
 }
 
 export interface IComparisonScheduler {
-  runManualComparison: (teamIds?: string[], channelIds?: string[]) => Promise<unknown[]>;
+  runManualComparison: (teamIds?: string[], channelIds?: string[]) => Promise<ComparisonResult[]>;
 }
