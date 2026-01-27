@@ -1,11 +1,3 @@
-export type BatchResult<T> = {
-  successful: T[];
-  failed: Array<{
-    item: unknown;
-    error: unknown;
-  }>;
-};
-
 export interface IDualRealtimeCommunicator {
   fetchMessagesFromBothSystems: (
     channel: string,

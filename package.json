@@ -29,7 +29,7 @@
     "@moonactive/moonactive-routes": "4.18.1",
     "@moonactive/moonactive-machine-meta": "3.1.5",
     "@moonactive/moonactive-mysql-client": "^2.1.3",
-    "@moonactive/moonactive-realtime-communications": "2.3.4-pr-56-b8cf4a0",
+    "@moonactive/moonactive-realtime-communications": "2.3.4-pr-56-292626e",
     "@moonactive/moonactive-secret-manager": "1.4.3",
     "@moonactive/moonactive-core-metrics": "1.2.1",
     "@moonactive/moonactive-server": "4.0.5",

@@ -29,18 +29,10 @@ export interface ITeamDiscoveryService {
 }
 
 export interface IMessageFetcherService {
-  fetchMessagesForTeams: (
-    teams: Array<{ teamId: string; channelId: string }>,
-    timeWindow: { fromTimestamp: number; toTimestamp: number }
-  ) => Promise<FetchResult[]>;
-  fetchMessagesByChannelId: (
+  fetchMessages: (
     channelId: string,
     timeWindow: { fromTimestamp: number; toTimestamp: number }
   ) => Promise<FetchResult>;
-  calculateTimeWindow: (
-    pollingIntervalMinutes: number,
-    bufferMinutes: number
-  ) => { fromTimestamp: number; toTimestamp: number };
 }
 
 export interface IComparisonEngine {

@@ -1,7 +1,8 @@
 import { ComparisonResult } from '../modules/comparison-engine/types';
 import {
-  FetchResult, IAlerts, IFeatureConfigClient, ILogger, ModuleParams, SchedulerConfig,
+  FetchResult, IAlerts, ILogger, ModuleParams, SchedulerConfig,
 } from '../types';
+import { calculateTimeWindow } from '../utils/time-window';
 import {
   IComparisonEngine, IComparisonScheduler, IMessageFetcherService, IMetricsEmitter, ITeamDiscoveryService,
 } from './types';
@@ -14,8 +15,6 @@ class ComparisonScheduler implements IComparisonScheduler {
   private logger: ILogger;
 
   private alerts: IAlerts;
-
-  private featureConfigClient: IFeatureConfigClient;
 
   private teamDiscoveryService: ITeamDiscoveryService | null;
 
@@ -39,7 +38,6 @@ class ComparisonScheduler implements IComparisonScheduler {
     this.config = config || {};
     this.logger = services.loggerManager.getLogger('comparison-scheduler');
     this.alerts = services.alerts;
-    this.featureConfigClient = services.featureConfig.client;
     this.teamDiscoveryService = null;
     this.messageFetcherService = null;
     this.comparisonEngine = null;
@@ -58,7 +56,7 @@ class ComparisonScheduler implements IComparisonScheduler {
     this.comparisonEngine = this.services.comparisonEngine as IComparisonEngine;
     this.metricsEmitter = this.services.metricsEmitter as IMetricsEmitter;
 
-    await this._loadSchedulerConfig();
+    this._loadSchedulerConfig();
 
     this.logger.info('Comparison Scheduler initialized successfully', {
       config: this.schedulerConfig,
@@ -127,9 +125,9 @@ class ComparisonScheduler implements IComparisonScheduler {
   }
 
   public async runManualComparison(teamIds?: string[], channelIds?: string[]): Promise<ComparisonResult[]> {
-    const timeWindow = this.messageFetcherService!.calculateTimeWindow(
+    const timeWindow = calculateTimeWindow(
       this.schedulerConfig.pollingIntervalMinutes,
-      5,
+      5000,
     );
 
     if (channelIds && channelIds.length > 0) {
@@ -137,7 +135,7 @@ class ComparisonScheduler implements IComparisonScheduler {
       const comparisonResults: ComparisonResult[] = [];
 
       for (const channelId of channelIds) {
-        const fetchResult = await this.messageFetcherService!.fetchMessagesByChannelId(channelId, timeWindow);
+        const fetchResult = await this.messageFetcherService!.fetchMessages(channelId, timeWindow);
         const comparisonResult = await this._compareTeam(fetchResult);
         if (comparisonResult) {
           comparisonResults.push(comparisonResult);
@@ -161,10 +159,10 @@ class ComparisonScheduler implements IComparisonScheduler {
       throw new Error('No teams found for manual comparison');
     }
 
-    const fetchResults = await this.messageFetcherService!.fetchMessagesForTeams(teams, timeWindow);
     const comparisonResults: ComparisonResult[] = [];
 
-    for (const fetchResult of fetchResults) {
+    for (const team of teams) {
+      const fetchResult = await this.messageFetcherService!.fetchMessages(team.channelId, timeWindow);
       const comparisonResult = await this._compareTeam(fetchResult);
       if (comparisonResult) {
         comparisonResults.push(comparisonResult);
@@ -174,39 +172,19 @@ class ComparisonScheduler implements IComparisonScheduler {
     return comparisonResults;
   }
 
-  private async _loadSchedulerConfig(): Promise<void> {
-    try {
-      const config = await this.featureConfigClient.getValue(
-        'chat-comparison-config',
-        '',
-        {},
-        (this.config.comparisonScheduler as Record<string, unknown>) || {},
-      );
+  private _loadSchedulerConfig(): void {
+    const cfg = (this.config.comparisonScheduler as Record<string, unknown>)?.comparisonScheduler as Record<string, unknown> || {};
 
-      const cfg = config as Record<string, unknown>;
-      this.schedulerConfig = {
-        enabled: cfg.enabled !== false,
-        teamDiscoveryIntervalMinutes: (cfg.team_discovery_interval_minutes as number) || 30,
-        pollingIntervalMinutes: (cfg.polling_interval_minutes as number) || 15,
-        pollingTimeWindowMinutes: (cfg.polling_time_window_minutes as number) || 20,
-        batchSize: (cfg.batch_size as number) || 50,
-        maxMessagesPerFetch: (cfg.max_messages_per_fetch as number) || 100,
-      };
-    } catch (error) {
-      this.logger.warn('Failed to load scheduler config from feature config, using defaults', {
-        error: (error as Error).message,
-      });
+    this.schedulerConfig = {
+      enabled: cfg?.enabled !== false,
+      teamDiscoveryIntervalMinutes: (cfg?.teamDiscoveryIntervalMinutes as number) || 30,
+      pollingIntervalMinutes: (cfg?.pollingIntervalMinutes as number) || 15,
+      pollingTimeWindowMinutes: (cfg?.pollingTimeWindowMinutes as number) || 20,
+      batchSize: (cfg?.batchSize as number) || 50,
+      maxMessagesPerFetch: (cfg?.maxMessagesPerFetch as number) || 100,
+    };
 
-      const cfg = this.config.comparisonScheduler as Record<string, unknown>;
-      this.schedulerConfig = {
-        enabled: cfg?.enabled !== false,
-        teamDiscoveryIntervalMinutes: (cfg?.teamDiscoveryIntervalMinutes as number) || 30,
-        pollingIntervalMinutes: (cfg?.pollingIntervalMinutes as number) || 15,
-        pollingTimeWindowMinutes: (cfg?.pollingTimeWindowMinutes as number) || 20,
-        batchSize: (cfg?.batchSize as number) || 50,
-        maxMessagesPerFetch: (cfg?.maxMessagesPerFetch as number) || 100,
-      };
-    }
+    this.logger.info('Loaded scheduler configuration', this.schedulerConfig);
   }
 
   private async _runTeamDiscovery(): Promise<void> {
@@ -230,7 +208,7 @@ class ComparisonScheduler implements IComparisonScheduler {
         return;
       }
 
-      const timeWindow = this.messageFetcherService!.calculateTimeWindow(
+      const timeWindow = calculateTimeWindow(
         this.schedulerConfig.pollingIntervalMinutes,
         5,
       );
@@ -240,13 +218,15 @@ class ComparisonScheduler implements IComparisonScheduler {
         timeWindow,
       });
 
-      const fetchResults = await this.messageFetcherService!.fetchMessagesForTeams(teams, timeWindow);
+      const comparisonResults: ComparisonResult[] = [];
 
-      this.logger.info('Messages fetched, starting comparisons', {
-        fetchResultCount: fetchResults.length,
-      });
-
-      const comparisonResults = await this._compareAllTeams(fetchResults);
+      for (const team of teams) {
+        const fetchResult = await this.messageFetcherService!.fetchMessages(team.channelId, timeWindow);
+        const comparisonResult = await this._compareTeam(fetchResult);
+        if (comparisonResult) {
+          comparisonResults.push(comparisonResult);
+        }
+      }
 
       this.metricsEmitter!.emitBatchSummary(comparisonResults);
 
@@ -265,19 +245,6 @@ class ComparisonScheduler implements IComparisonScheduler {
       });
       this.alerts.counter('chat_comparison.scheduled_comparison_failures', {});
     }
-  }
-
-  private async _compareAllTeams(fetchResults: FetchResult[]): Promise<ComparisonResult[]> {
-    const comparisonResults: ComparisonResult[] = [];
-
-    for (const fetchResult of fetchResults) {
-      const result = await this._compareTeam(fetchResult);
-      if (result) {
-        comparisonResults.push(result);
-      }
-    }
-
-    return comparisonResults;
   }
 
   private async _compareTeam(fetchResult: FetchResult): Promise<ComparisonResult | null> {

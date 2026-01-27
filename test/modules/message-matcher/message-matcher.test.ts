@@ -58,14 +58,14 @@ describe('MessageMatcher', () => {
 
       const chatServiceMessages: ChatMessage[] = [
         {
+          id: '100',
           content: {
-            metadata: { pubnubTimetoken: '100' },
             text: 'hello',
           },
         },
         {
+          id: '200',
           content: {
-            metadata: { pubnubTimetoken: '200' },
             text: 'world',
           },
         },
@@ -86,8 +86,8 @@ describe('MessageMatcher', () => {
 
       const chatServiceMessages: ChatMessage[] = [
         {
+          id: '100',
           content: {
-            metadata: { pubnubTimetoken: '100' },
             text: 'hello',
           },
         },
@@ -107,8 +107,8 @@ describe('MessageMatcher', () => {
 
       const chatServiceMessages: ChatMessage[] = [
         {
+          id: '100',
           content: {
-            metadata: { pubnubTimetoken: '100' },
             text: 'hello',
           },
         },
@@ -150,7 +150,7 @@ describe('MessageMatcher', () => {
       }
     });
 
-    it('should extract messageId from nested message.content', () => {
+    it('should extract messageId from nested message.id', () => {
       const pubnubMessages: PubnubMessage[] = [
         { timetoken: '100', message: { text: 'hello' } },
       ];
@@ -158,8 +158,8 @@ describe('MessageMatcher', () => {
       const chatServiceMessages: ChatMessage[] = [
         {
           message: {
+            id: '100',
             content: {
-              messageId: '100',
               text: 'hello',
             },
           },

@@ -90,17 +90,7 @@ class MessageMatcher {
   }
 
   private _extractMessageIdFromChatMessage(chatMsg: ChatMessage): string | null {
-    const content = chatMsg.message?.content || chatMsg.content;
-
-    if (!content) {
-      return null;
-    }
-
-    return content.metadata?.messageId
-      || content.messageId
-      || content.metadata?.pubnubTimetoken
-      || content.pubnubTimetoken
-      || null;
+    return chatMsg.message?.id || chatMsg.id || null;
   }
 }
 

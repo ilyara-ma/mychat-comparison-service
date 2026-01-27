@@ -1,6 +1,6 @@
 import { IMetricsEmitter } from '../../services/types';
 import {
-  IAlerts, IFeatureConfigClient, ILogger, ModuleParams, ThresholdsConfig,
+  IAlerts, ILogger, ModuleParams, ThresholdsConfig,
 } from '../../types';
 import AlertManager from './alert-manager';
 import LoggerFormatter from './logger-formatter';
@@ -13,8 +13,6 @@ class MetricsEmitter implements IMetricsEmitter {
 
   private alerts: IAlerts;
 
-  private featureConfigClient: IFeatureConfigClient;
-
   private alertManager: AlertManager | null;
 
   private loggerFormatter: LoggerFormatter | null;
@@ -26,7 +24,6 @@ class MetricsEmitter implements IMetricsEmitter {
     this.config = config || {};
     this.logger = services.loggerManager.getLogger('metrics-emitter');
     this.alerts = services.alerts;
-    this.featureConfigClient = services.featureConfig.client;
     this.alertManager = null;
     this.loggerFormatter = null;
     this.thresholds = {};
@@ -35,7 +32,7 @@ class MetricsEmitter implements IMetricsEmitter {
   public async init(): Promise<void> {
     this.logger.info('Initializing Metrics Emitter');
 
-    this.thresholds = await this._loadThresholds();
+    this.thresholds = this._loadThresholds();
 
     this.alertManager = new AlertManager(this.logger, this.alerts, this.thresholds);
     this.loggerFormatter = new LoggerFormatter(this.logger);
@@ -126,30 +123,21 @@ class MetricsEmitter implements IMetricsEmitter {
     });
   }
 
-  private async _loadThresholds(): Promise<Partial<ThresholdsConfig>> {
-    try {
-      const config = await this.featureConfigClient.getValue(
-        'chat-comparison-thresholds',
-        '',
-        {},
-        (this.config.comparisonThresholds as Partial<ThresholdsConfig>) || {},
-      );
+  private _loadThresholds(): Partial<ThresholdsConfig> {
+    const config = (this.config.comparisonThresholds as Record<string, number>) || {};
 
-      return {
-        messageCountDiscrepancyPercent: (config as Record<string, number>).message_count_discrepancy_percent || 5,
-        messageCountDiscrepancyAbsolute: (config as Record<string, number>).message_count_discrepancy_absolute || 10,
-        contentMismatchRatePercent: (config as Record<string, number>).content_mismatch_rate_percent || 1,
-        orderingViolationsCount: (config as Record<string, number>).ordering_violations_count || 0,
-        coveragePercentageMin: (config as Record<string, number>).coverage_percentage_min || 90,
-        latencyDiffMsMax: (config as Record<string, number>).latency_diff_ms_max || 5000,
-        apiFailureRatePercent: (config as Record<string, number>).api_failure_rate_percent || 5,
-      };
-    } catch (error) {
-      this.logger.warn('Failed to load thresholds from feature config, using defaults', {
-        error: (error as Error).message,
-      });
-      return (this.config.comparisonThresholds as Partial<ThresholdsConfig>) || {};
-    }
+    const thresholds = {
+      messageCountDiscrepancyPercent: config.messageCountDiscrepancyPercent || 5,
+      messageCountDiscrepancyAbsolute: config.messageCountDiscrepancyAbsolute || 10,
+      contentMismatchRatePercent: config.contentMismatchRatePercent || 1,
+      orderingViolationsCount: config.orderingViolationsCount || 0,
+      coveragePercentageMin: config.coveragePercentageMin || 90,
+      latencyDiffMsMax: config.latencyDiffMsMax || 5000,
+      apiFailureRatePercent: config.apiFailureRatePercent || 5,
+    };
+
+    this.logger.info('Loaded thresholds configuration', thresholds);
+    return thresholds;
   }
 }
 

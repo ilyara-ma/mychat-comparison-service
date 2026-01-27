@@ -1,6 +1,6 @@
 import { ITeamDiscoveryService } from '../../services/types';
 import {
-  IAlerts, IFeatureConfigClient, ILogger, ModuleParams, Team,
+  IAlerts, ILogger, ModuleParams, Team,
 } from '../../types';
 import TeamCache from './team-cache';
 import TeamScanner from './team-scanner';
@@ -15,8 +15,6 @@ class TeamDiscoveryService implements ITeamDiscoveryService {
 
   private alerts: IAlerts;
 
-  private featureConfigClient: IFeatureConfigClient;
-
   private teamsDAL: ITeamsDAL | null;
 
   private teamScanner: TeamScanner | null;
@@ -29,7 +27,6 @@ class TeamDiscoveryService implements ITeamDiscoveryService {
     this.config = config || {};
     this.logger = services.loggerManager.getLogger('team-discovery');
     this.alerts = services.alerts;
-    this.featureConfigClient = services.featureConfig.client;
     this.teamsDAL = null;
     this.teamScanner = null;
     this.teamCache = new TeamCache();
@@ -109,7 +106,7 @@ class TeamDiscoveryService implements ITeamDiscoveryService {
   }
 
   private async _discoverTeams(): Promise<Team[]> {
-    const manualTeamIds = await this._getManualTeamIds();
+    const manualTeamIds = this._getManualTeamIds();
 
     if (manualTeamIds && manualTeamIds.length > 0) {
       this.logger.info('Using manual team ID override', { count: manualTeamIds.length });
@@ -120,22 +117,12 @@ class TeamDiscoveryService implements ITeamDiscoveryService {
     return [];
   }
 
-  private async _getManualTeamIds(): Promise<string[]> {
-    try {
-      const config = await this.featureConfigClient.getValue(
-        'chat-comparison-config',
-        '',
-        {},
-        { team_ids_override: [] },
-      );
+  private _getManualTeamIds(): string[] {
+    const config = (this.config.comparisonScheduler as Record<string, unknown>)?.comparisonScheduler as Record<string, string[]> || {};
+    const teamIds = config.teamIdsOverride || [];
 
-      return (config as Record<string, string[]>).team_ids_override || [];
-    } catch (error) {
-      this.logger.warn('Failed to get manual team IDs from feature config', {
-        error: (error as Error).message,
-      });
-      return (this.config.comparisonScheduler as Record<string, string[]>)?.teamIdsOverride || [];
-    }
+    this.logger.info('Loading manual team IDs from config', { teamIds });
+    return teamIds;
   }
 }
 
