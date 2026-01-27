@@ -1,0 +1,76 @@
+src/services/dual-realtime-communicator.ts
+  35b723d 58-62
+test/modules/metrics-alerting/alert-manager.test.ts
+  aca867a 37-59,283-380
+test/services/dual-realtime-communicator.test.ts
+  aca867a 127-227
+test/modules/team-discovery/team-discovery-service.test.ts
+  aca867a 153-174
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.22",
+  "base_commit_sha": "145c3834a1024c2c2798ad35829acbe8b55f4b2a",
+  "prompts": {
+    "aca867a": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "9e1e9b3e-b6d4-4bc6-a57b-8fc1d6ec5eae",
+        "model": "composer-1"
+      },
+      "human_author": "ilyara-ma <ilya.ra@moonactive.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "check uncovered line by unit tests. verify that there is no \"unused\" code",
+          "timestamp": "2026-01-27T19:06:47.666Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Checking test coverage and scanning for unused code. Reviewing the project structure and test configuration.",
+          "timestamp": "2026-01-27T19:06:50.566Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "glob_file_search",
+          "input": {
+            "globPattern": "*.config.*"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "glob_file_search",
+          "input": {
+            "globPattern": "jest.config.*"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "glob_file_search",
+          "input": {
+            "globPattern": "nyc.config.*"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "Checking for coverage configuration and running tests with coverage:",
+          "timestamp": "2026-01-27T19:06:54.346Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Checking coverage output and scanning for unused code:",
+          "timestamp": "2026-01-27T19:06:57.671Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Reviewing files with uncovered lines to determine if they're unused or need tests:",
+          "timestamp": "2026-01-27T19:07:02.247Z"
+        }
+      ],
+      "total_additions": 251,
+      "total_deletions": 6,
+      "accepted_lines": 246,
+      "overriden_lines": 0
+    }
+  }
+}
