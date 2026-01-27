@@ -1,0 +1,163 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Chat Comparison Tool API",
+    "version": "1.0.0",
+    "description": "API for comparing chat messages between PubNub and Chat Service"
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/comparison/run": {
+      "post": {
+        "summary": "Run on-demand comparison",
+        "description": "Triggers a comparison between PubNub and Chat Service for specified teams or all cached teams",
+        "tags": [
+          "comparison"
+        ],
+        "operationId": "runComparison",
+        "parameters": [
+          {
+            "name": "teamIds",
+            "in": "query",
+            "description": "Comma-separated list of team IDs or array of team IDs",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Request body with optional team IDs",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/ComparisonRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Comparison completed successfully",
+            "schema": {
+              "$ref": "#/definitions/ComparisonResponse"
+            }
+          },
+          "500": {
+            "description": "Comparison failed",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ComparisonRequest": {
+      "type": "object",
+      "properties": {
+        "teamIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of team IDs to compare. If not provided, all cached teams will be compared"
+        }
+      }
+    },
+    "ComparisonResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the comparison completed successfully"
+        },
+        "teamCount": {
+          "type": "integer",
+          "description": "Number of teams that were compared"
+        },
+        "comparisonCount": {
+          "type": "integer",
+          "description": "Number of comparison results returned"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ComparisonResult"
+          },
+          "description": "Array of comparison results for each team"
+        }
+      },
+      "required": [
+        "success",
+        "teamCount",
+        "comparisonCount",
+        "results"
+      ]
+    },
+    "ComparisonResult": {
+      "type": "object",
+      "properties": {
+        "teamId": {
+          "type": "string",
+          "description": "The team ID that was compared"
+        },
+        "channelId": {
+          "type": "string",
+          "description": "The channel ID for the team"
+        },
+        "metrics": {
+          "type": "object",
+          "description": "Comparison metrics",
+          "properties": {
+            "messageCountDiscrepancy": {
+              "type": "integer",
+              "description": "Absolute difference in message counts between systems"
+            },
+            "contentMismatchRate": {
+              "type": "number",
+              "description": "Percentage of messages with content mismatches"
+            },
+            "orderingViolations": {
+              "type": "integer",
+              "description": "Number of ordering violations detected"
+            },
+            "coveragePercentage": {
+              "type": "number",
+              "description": "Coverage percentage of Chat vs PubNub"
+            },
+            "latencyDiffMs": {
+              "type": "number",
+              "description": "Average latency difference in milliseconds"
+            }
+          }
+        }
+      }
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string",
+          "description": "Error type"
+        },
+        "message": {
+          "type": "string",
+          "description": "Error message"
+        }
+      },
+      "required": [
+        "error",
+        "message"
+      ]
+    }
+  }
+}

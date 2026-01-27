@@ -3,7 +3,6 @@ import MessageFetcherService from './modules/message-fetcher/message-fetcher-ser
 import MessageMatcher from './modules/message-matcher/message-matcher';
 import MetricsEmitter from './modules/metrics-alerting/metrics-emitter';
 import TeamDiscoveryService from './modules/team-discovery/team-discovery-service';
-import ComparisonRoute from './routes/comparison-route';
 import ComparisonScheduler from './services/comparison-scheduler';
 import DualRealtimeCommunicator from './services/dual-realtime-communicator';
 
@@ -53,20 +52,10 @@ export = {
       module: ComparisonScheduler,
       name: 'comparisonScheduler',
     },
-    {
-      module: ComparisonRoute,
-      name: 'comparisonRoute',
-    },
   ],
   serverDescriptor: {
     module: '@moonactive/moonactive-server',
     name: 'server',
-    routes: [
-      {
-        path: '/api/v1/comparison/run',
-        method: 'post',
-        handler: 'comparisonRoute.runComparison',
-      },
-    ],
+    routes: [],
   },
 };

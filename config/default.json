@@ -3,13 +3,7 @@
     "port": 3000,
     "host": "http://localhost",
     "readyRoute": "api/v1/ready",
-    "routes": [
-      {
-        "path": "/api/v1/comparison/run",
-        "method": "post",
-        "handler": "comparisonRoute.runComparison"
-      }
-    ]
+    "routes": []
   },
   "loggerManager": {
     "env": "development",
@@ -30,9 +24,9 @@
     }
   },
   "alerts": {
-    "prefix": "coinmaster.chat-comparison.service",
+    "prefix": "coinmaster.teams.service",
     "defaultVendors": [
-      "newRelic"
+      "serverMetrics"
     ],
     "cron": "0 * * * * *",
     "serverMetrics": {
@@ -54,6 +48,32 @@
       }
     ]
   },
+  "newRelicClient": {
+    "baseUrl": "https://insights-collector.newrelic.com/",
+    "format": {
+      "type": "json"
+    }
+  },
+  "serverMetricsClient": {
+    "baseUrl": "http://server-metrics.cm-ci.eks.int/",
+    "format": {
+      "type": "json"
+    }
+  },
+  "newRelicMsClient": {
+    "originName": "chat-comparison-tool",
+    "targetName": "new-relic",
+    "clients": [
+      "newRelicClient"
+    ]
+  },
+  "serverMetricsMsClient": {
+    "originName": "chat-comparison-tool",
+    "targetName": "server-metrics",
+    "clients": [
+      "serverMetricsClient"
+    ]
+  },
   "featureConfig": {
     "featureConfigMode": "on",
     "connectors": [
@@ -70,7 +90,21 @@
     "useNewSecretFormat": true
   },
   "routes": {
-    "serverFramework": "fastify"
+    "serverFramework": "fastify",
+    "formBodyArrayLimit": 200,
+    "compression": {
+      "enabled": true,
+      "options": {
+        "threshold": 9024,
+        "encodings": [
+          "gzip",
+          "deflate"
+        ]
+      }
+    },
+    "api": {
+      "ui": true
+    }
   },
   "teamsRdsClient": {
     "clusterName": "teams-rds",

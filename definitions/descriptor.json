@@ -73,11 +73,6 @@
       "entryPoint": "default"
     },
     {
-      "name": "comparisonRoute",
-      "path": "./dist/routes/comparison-route",
-      "entryPoint": "default"
-    },
-    {
       "name": "server",
       "path": "@moonactive/moonactive-server"
     }

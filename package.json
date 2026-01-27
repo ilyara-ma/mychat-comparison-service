@@ -6,7 +6,7 @@
   "license": "ISC",
   "repository": "git://github.com/moonactive/chat-comparison-tool.git",
   "scripts": {
-    "build": "tsc",
+    "build": "rimraf lib && tsc",
     "start": "npm run build && node dist/app.js",
     "start:local": "AWS_PROFILE=moonactive-ci npm start",
     "test": "AWS_PROFILE=moonactive-ci nyc mocha 'test/**/*.test.ts' --exit --require ts-node/register --require @moonactive/moonactive-test-reporter --reporter mochawesome",
