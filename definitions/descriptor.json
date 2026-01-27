@@ -1,0 +1,85 @@
+{
+  "machineMetaInfo": {
+    "name": "machineMeta",
+    "path": "@moonactive/moonactive-machine-meta"
+  },
+  "logger": {
+    "name": "loggerManager",
+    "path": "@moonactive/moonactive-logger"
+  },
+  "descriptor": [
+    {
+      "name": "secretManager",
+      "path": "@moonactive/moonactive-secret-manager"
+    },
+    {
+      "name": "alerts",
+      "path": "@moonactive/alerts"
+    },
+    {
+      "name": "featureConfig",
+      "path": "@moonactive/moonactive-feature-config"
+    },
+    {
+      "name": "coreMetrics",
+      "path": "@moonactive/moonactive-core-metrics"
+    },
+    {
+      "name": "contextService",
+      "path": "@moonactive/request-context",
+      "entryPoint": "ContextService"
+    },
+    {
+      "name": "routes",
+      "path": "@moonactive/moonactive-routes"
+    },
+    {
+      "name": "teamsRdsClient",
+      "path": "@moonactive/moonactive-mysql-client"
+    },
+    {
+      "name": "dualRealtimeCommunicator",
+      "path": "./dist/services/dual-realtime-communicator",
+      "entryPoint": "default"
+    },
+    {
+      "name": "teamDiscoveryService",
+      "path": "./dist/modules/team-discovery/team-discovery-service",
+      "entryPoint": "default"
+    },
+    {
+      "name": "messageFetcherService",
+      "path": "./dist/modules/message-fetcher/message-fetcher-service",
+      "entryPoint": "default"
+    },
+    {
+      "name": "messageMatcher",
+      "path": "./dist/modules/message-matcher/message-matcher",
+      "entryPoint": "default"
+    },
+    {
+      "name": "comparisonEngine",
+      "path": "./dist/modules/comparison-engine/comparison-engine",
+      "entryPoint": "default"
+    },
+    {
+      "name": "metricsEmitter",
+      "path": "./dist/modules/metrics-alerting/metrics-emitter",
+      "entryPoint": "default"
+    },
+    {
+      "name": "comparisonScheduler",
+      "path": "./dist/services/comparison-scheduler",
+      "entryPoint": "default"
+    },
+    {
+      "name": "comparisonRoute",
+      "path": "./dist/routes/comparison-route",
+      "entryPoint": "default"
+    },
+    {
+      "name": "server",
+      "path": "@moonactive/moonactive-server"
+    }
+  ]
+}

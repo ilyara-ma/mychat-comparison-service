@@ -1,0 +1,167 @@
+{
+  "server": {
+    "port": 3000,
+    "host": "http://localhost",
+    "readyRoute": "api/v1/ready",
+    "routes": [
+      {
+        "path": "/api/v1/comparison/run",
+        "method": "post",
+        "handler": "comparisonRoute.runComparison"
+      }
+    ]
+  },
+  "loggerManager": {
+    "env": "development",
+    "pino": {
+      "level": "info"
+    }
+  },
+  "secretManager": {
+    "region": "us-east-1",
+    "useDefaultValue": false,
+    "buckets": {
+      "teamsPubnubKey": "arn:aws:secretsmanager:us-east-1:395584515870:secret:ci-teams-pubnub-key-hfdDvl",
+      "teamsPubnubPublishKey": "arn:aws:secretsmanager:us-east-1:395584515870:secret:ci-teams-pubnub-publish-key-VQIYsU",
+      "teamsPubnubSubscribeKey": "arn:aws:secretsmanager:us-east-1:395584515870:secret:ci-teams-pubnub-subscribe-key-QMp7cS",
+      "rds-teams-rds-user": "arn:aws:secretsmanager:us-east-1:395584515870:secret:ci-cm-teams-rds-username-Z28UFO",
+      "rds-teams-rds-password": "arn:aws:secretsmanager:us-east-1:395584515870:secret:ci-cm-teams-rds-password-Z28UFO",
+      "featureConfig": "arn:aws:secretsmanager:us-east-1:395584515870:secret:ci-launchdarkly-key-kpZfVX"
+    }
+  },
+  "alerts": {
+    "prefix": "coinmaster.chat-comparison.service",
+    "defaultVendors": [
+      "newRelic"
+    ],
+    "cron": "0 * * * * *",
+    "serverMetrics": {
+      "serverMetricsEndpoint": "internal-api/v1/metrics/newrelic",
+      "eventsAPIEndpoint": "v1/accounts/2739055/events"
+    },
+    "dimensions": [
+      {
+        "name": "host",
+        "type": "host"
+      },
+      {
+        "name": "environment",
+        "type": "environment"
+      },
+      {
+        "name": "k8s-cluster-name",
+        "type": "k8s-cluster-name"
+      }
+    ]
+  },
+  "featureConfig": {
+    "featureConfigMode": "on",
+    "connectors": [
+      "launch-darkly/relay-proxy-connector",
+      "launch-darkly/external-endpoint-connector"
+    ],
+    "fallbackConnectors": [
+      "launch-darkly/local-file-connector"
+    ],
+    "localFilePaths": [
+      "./config/feature-flags.json"
+    ],
+    "clientType": "launch-darkly",
+    "useNewSecretFormat": true
+  },
+  "routes": {
+    "serverFramework": "fastify"
+  },
+  "teamsRdsClient": {
+    "clusterName": "teams-rds",
+    "connection": {
+      "host": "cm-ci-teams-rds.cm-ci.int",
+      "readerHost": "cm-ci-teams-rds-ro.cm-ci.int",
+      "port": 3306,
+      "database": "teams",
+      "connectionLimit": 10
+    }
+  },
+  "teamsDAL": {
+    "clientName": "teamsRdsClient",
+    "provider": "mysql"
+  },
+  "teamDiscoveryService": {
+    "teamsDAL": {
+      "clientName": "teamsRdsClient",
+      "provider": "mysql"
+    },
+    "comparisonScheduler": {
+      "enabled": true,
+      "teamDiscoveryIntervalMinutes": 30,
+      "pollingIntervalMinutes": 15,
+      "pollingTimeWindowMinutes": 20,
+      "batchSize": 50,
+      "maxMessagesPerFetch": 100,
+      "teamIdsOverride": []
+    }
+  },
+  "comparisonScheduler": {
+    "comparisonScheduler": {
+      "enabled": true,
+      "teamDiscoveryIntervalMinutes": 30,
+      "pollingIntervalMinutes": 15,
+      "pollingTimeWindowMinutes": 20,
+      "batchSize": 50,
+      "maxMessagesPerFetch": 100,
+      "teamIdsOverride": []
+    },
+    "comparisonThresholds": {
+      "messageCountDiscrepancyPercent": 5,
+      "messageCountDiscrepancyAbsolute": 10,
+      "contentMismatchRatePercent": 1,
+      "orderingViolationsCount": 0,
+      "coveragePercentageMin": 90,
+      "latencyDiffMsMax": 5000,
+      "apiFailureRatePercent": 5
+    }
+  },
+  "messageFetcherService": {
+    "comparisonScheduler": {
+      "enabled": true,
+      "teamDiscoveryIntervalMinutes": 30,
+      "pollingIntervalMinutes": 15,
+      "pollingTimeWindowMinutes": 20,
+      "batchSize": 50,
+      "maxMessagesPerFetch": 100,
+      "teamIdsOverride": []
+    }
+  },
+  "metricsEmitter": {
+    "comparisonThresholds": {
+      "messageCountDiscrepancyPercent": 5,
+      "messageCountDiscrepancyAbsolute": 10,
+      "contentMismatchRatePercent": 1,
+      "orderingViolationsCount": 0,
+      "coveragePercentageMin": 90,
+      "latencyDiffMsMax": 5000,
+      "apiFailureRatePercent": 5
+    }
+  },
+  "dualRealtimeCommunicator": {
+    "rtcService": {
+      "provider": "chatService",
+      "rollout": {
+        "pubnub": {
+          "origin": "moonactive.pubnubapi.com",
+          "retryCount": 2,
+          "minMillisRetryDelay": 100,
+          "maxMillisRetryDelay": 1000
+        },
+        "chatService": {
+          "baseUrl": "http://ci-gs-od-chat1-chat.cm-ci.eks.int",
+          "requestTimeout": 30000,
+          "retryLimit": 3,
+          "retryCount": 2,
+          "minMillisRetryDelay": 100,
+          "maxMillisRetryDelay": 300
+        }
+      }
+    }
+  }
+}

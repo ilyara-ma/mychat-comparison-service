@@ -1,20 +1,7 @@
-import path from 'path';
-import serviceDescriptor from './service-descriptor';
+const { start } = require('@moonactive/microservice-core');
 
-const { Application } = require('@moonactive/microservice-core');
-
-const app = new Application({
-  serviceDescriptor,
-  configPath: path.join(__dirname, 'config'),
-});
-
-app.start()
-  .then(() => {
-    console.log('Chat Comparison Service started successfully');
-  })
-  .catch((error: Error) => {
-    console.error('Failed to start Chat Comparison Service:', error);
+start()
+  .catch((e: Error) => {
+    console.log(`Error while starting the application: ${e.stack}`);
     process.exit(1);
   });
-
-export = app;

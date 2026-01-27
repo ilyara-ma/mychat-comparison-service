@@ -28,13 +28,16 @@ class DualRealtimeCommunicator {
     this.logger.info('Initializing Dual Realtime Communicator');
 
     const RealtimeCommunicationsService = require('@moonactive/moonactive-realtime-communications');
-    const rtcConfig = (this.config.realtimeCommunications as Record<string, Record<string, unknown>>) || {};
+    const rtcConfig = (this.config.rtcService as Record<string, unknown>) || {};
+    const rollout = (rtcConfig.rollout as Record<string, Record<string, unknown>>) || {};
+    const pubnubConfig = rollout.pubnub || (rtcConfig.pubnub as Record<string, unknown>) || {};
+    const chatServiceConfig = rollout.chatService || (rtcConfig.chatService as Record<string, unknown>) || {};
 
     this.pubnubCommunicator = new RealtimeCommunicationsService({
       services: this.services,
       config: {
         provider: 'pubnub',
-        pubnub: rtcConfig.pubnub || {},
+        pubnub: pubnubConfig,
       },
     }) as IRealtimeCommunicationsService;
 
@@ -42,7 +45,7 @@ class DualRealtimeCommunicator {
       services: this.services,
       config: {
         provider: 'chatService',
-        chatService: rtcConfig.chatService || {},
+        chatService: chatServiceConfig,
       },
     }) as IRealtimeCommunicationsService;
 

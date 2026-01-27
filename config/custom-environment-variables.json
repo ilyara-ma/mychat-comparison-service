@@ -1,0 +1,41 @@
+{
+  "server": {
+    "port": "PORT"
+  },
+  "secretManager": {
+    "region": "AWS_REGION"
+  },
+  "dualRealtimeCommunicator": {
+    "rtcService": {
+      "rollout": {
+        "chatService": {
+          "baseUrl": "CHAT_SERVICE_URL"
+        }
+      }
+    }
+  },
+  "rtcService": {
+    "rollout": {
+      "chatService": {
+        "baseUrl": "CHAT_SERVICE_URL"
+      }
+    },
+    "chatService": {
+      "baseUrl": "CHAT_SERVICE_URL"
+    }
+  },
+  "teamsRdsClient": {
+    "connection": {
+      "host": "TEAMS_DB_HOST",
+      "port": "TEAMS_DB_PORT",
+      "database": "TEAMS_DB_NAME"
+    }
+  },
+  "teamsDAL": {
+    "mysql": {
+      "host": "TEAMS_DB_HOST",
+      "port": "TEAMS_DB_PORT",
+      "database": "TEAMS_DB_NAME"
+    }
+  }
+}
