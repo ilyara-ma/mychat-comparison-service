@@ -34,6 +34,29 @@ describe('AlertManager', () => {
     alertManager = new AlertManager(logger, alerts, thresholds);
   });
 
+  it('should handle null thresholds', () => {
+    const manager = new AlertManager(logger, alerts, null as unknown as Partial<ThresholdsConfig>);
+    const comparisonResult: ComparisonResult = {
+      teamId: 'team1',
+      channelId: 'ch1',
+      timestamp: 1000,
+      metrics: {
+        countDiff: 0,
+        contentMismatchRate: 0,
+        orderingViolations: 0,
+        coverage: 100,
+        avgLatencyDiff: 0,
+        maxLatencyDiff: 0,
+        chatMissingCount: 0,
+        pubnubMissingCount: 0,
+      },
+    };
+
+    const result = manager.checkThresholds(comparisonResult);
+
+    expect(result).to.be.an('array');
+  });
+
   describe('checkThresholds', () => {
     it('should create CRITICAL alert for pubnub missing messages', () => {
       const comparisonResult: ComparisonResult = {
@@ -256,6 +279,105 @@ describe('AlertManager', () => {
       const result = alertManager.checkThresholds(comparisonResult);
 
       expect(result).to.be.an('array').that.is.empty;
+    });
+
+    it('should use default threshold when coveragePercentageMin is not set', () => {
+      const manager = new AlertManager(logger, alerts, {});
+      const comparisonResult: ComparisonResult = {
+        teamId: 'team1',
+        channelId: 'ch1',
+        timestamp: 1000,
+        metrics: {
+          countDiff: 0,
+          contentMismatchRate: 0,
+          orderingViolations: 0,
+          coverage: 85,
+          avgLatencyDiff: 0,
+          maxLatencyDiff: 0,
+          chatMissingCount: 0,
+          pubnubMissingCount: 0,
+        },
+      };
+
+      const result = manager.checkThresholds(comparisonResult);
+
+      expect(result).to.have.lengthOf(1);
+      expect(result[0].metric).to.equal('coverage_percentage');
+    });
+
+    it('should use default threshold when contentMismatchRatePercent is not set', () => {
+      const manager = new AlertManager(logger, alerts, {});
+      const comparisonResult: ComparisonResult = {
+        teamId: 'team1',
+        channelId: 'ch1',
+        timestamp: 1000,
+        metrics: {
+          countDiff: 0,
+          contentMismatchRate: 2,
+          orderingViolations: 0,
+          coverage: 100,
+          avgLatencyDiff: 0,
+          maxLatencyDiff: 0,
+          chatMissingCount: 0,
+          pubnubMissingCount: 0,
+        },
+      };
+
+      const result = manager.checkThresholds(comparisonResult);
+
+      expect(result).to.have.lengthOf(1);
+      expect(result[0].metric).to.equal('content_mismatch_rate');
+    });
+
+    it('should handle chat missing messages below threshold', () => {
+      const comparisonResult: ComparisonResult = {
+        teamId: 'team1',
+        channelId: 'ch1',
+        timestamp: 1000,
+        metrics: {
+          countDiff: 0,
+          contentMismatchRate: 0,
+          orderingViolations: 0,
+          coverage: 100,
+          avgLatencyDiff: 0,
+          maxLatencyDiff: 0,
+          chatMissingCount: 2,
+          pubnubMissingCount: 0,
+        },
+        details: {
+          totalPubnubMessages: 100,
+          totalChatServiceMessages: 98,
+          matchedCount: 98,
+          contentMismatchCount: 0,
+          orderingViolationCount: 0,
+        },
+      };
+
+      const result = alertManager.checkThresholds(comparisonResult);
+
+      expect(result).to.be.an('array').that.is.empty;
+    });
+
+    it('should handle chat missing messages with no details', () => {
+      const comparisonResult: ComparisonResult = {
+        teamId: 'team1',
+        channelId: 'ch1',
+        timestamp: 1000,
+        metrics: {
+          countDiff: 0,
+          contentMismatchRate: 0,
+          orderingViolations: 0,
+          coverage: 100,
+          avgLatencyDiff: 0,
+          maxLatencyDiff: 0,
+          chatMissingCount: 10,
+          pubnubMissingCount: 0,
+        },
+      };
+
+      const result = alertManager.checkThresholds(comparisonResult);
+
+      expect(result).to.be.an('array');
     });
   });
 

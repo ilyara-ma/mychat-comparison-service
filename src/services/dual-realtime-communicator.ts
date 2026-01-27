@@ -55,11 +55,11 @@ class DualRealtimeCommunicator {
     channel: string,
     options: Record<string, unknown> = {},
   ): Promise<{
-    pubnubMessages: unknown[];
-    chatServiceMessages: unknown[];
-    pubnubSuccess: boolean;
-    chatServiceSuccess: boolean;
-  }> {
+      pubnubMessages: unknown[];
+      chatServiceMessages: unknown[];
+      pubnubSuccess: boolean;
+      chatServiceSuccess: boolean;
+    }> {
     const startTime = Date.now();
 
     const [pubnubResult, chatServiceResult] = await Promise.allSettled([

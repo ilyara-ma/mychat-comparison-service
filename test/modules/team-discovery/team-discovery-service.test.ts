@@ -150,5 +150,27 @@ describe('TeamDiscoveryService', () => {
 
       expect(service).to.be.instanceOf(TeamDiscoveryService);
     });
+
+    it('should handle null config', () => {
+      const Module = require('module');
+      const originalRequire = Module.prototype.require;
+      Module.prototype.require = function (id: string) {
+        if (id === '@moonactive/teams-dal') {
+          return function () {
+            return teamsDAL;
+          };
+        }
+        return originalRequire.apply(this, arguments);
+      };
+
+      const service = new TeamDiscoveryService({
+        services,
+        config: null as unknown as Record<string, unknown>,
+      });
+
+      Module.prototype.require = originalRequire;
+
+      expect(service).to.be.instanceOf(TeamDiscoveryService);
+    });
   });
 });

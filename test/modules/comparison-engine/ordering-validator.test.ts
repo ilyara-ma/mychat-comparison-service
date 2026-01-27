@@ -89,11 +89,45 @@ describe('OrderingValidator', () => {
       expect(result).to.be.an('array').that.is.empty;
     });
 
+    it('should handle null pubnub messages', () => {
+      const matchedPairs: MessagePair[] = [
+        {
+          pubnubMsg: null as unknown as Record<string, unknown>,
+          chatMsg: { offset: 100 },
+        },
+        {
+          pubnubMsg: { timetoken: '200' },
+          chatMsg: { offset: 200 },
+        },
+      ];
+
+      const result = orderingValidator.validate(matchedPairs);
+
+      expect(result).to.be.an('array').that.is.empty;
+    });
+
     it('should handle messages without offset', () => {
       const matchedPairs: MessagePair[] = [
         {
           pubnubMsg: { timetoken: '100' },
           chatMsg: {},
+        },
+        {
+          pubnubMsg: { timetoken: '200' },
+          chatMsg: { offset: 200 },
+        },
+      ];
+
+      const result = orderingValidator.validate(matchedPairs);
+
+      expect(result).to.be.an('array').that.is.empty;
+    });
+
+    it('should handle null chat messages', () => {
+      const matchedPairs: MessagePair[] = [
+        {
+          pubnubMsg: { timetoken: '100' },
+          chatMsg: null as unknown as Record<string, unknown>,
         },
         {
           pubnubMsg: { timetoken: '200' },

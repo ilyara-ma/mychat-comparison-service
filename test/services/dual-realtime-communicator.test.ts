@@ -124,5 +124,106 @@ describe('DualRealtimeCommunicator', () => {
       expect(result.chatServiceSuccess).to.be.false;
       expect(result.chatServiceMessages).to.deep.equal([]);
     });
+
+    it('should handle null config', async () => {
+      const dualCommunicator = new DualRealtimeCommunicator({ services: services as IServices, config: null as unknown as Record<string, unknown> });
+      await dualCommunicator.init();
+
+      expect(pubnubCommunicatorStub.init.calledOnce).to.be.true;
+      expect(chatServiceCommunicatorStub.init.calledOnce).to.be.true;
+    });
+
+    it('should handle missing options parameter', async () => {
+      pubnubCommunicatorStub.fetchAllMessages.resolves({ success: true, value: [] });
+      chatServiceCommunicatorStub.fetchAllMessages.resolves({ success: true, value: [] });
+
+      const dualCommunicator = new DualRealtimeCommunicator({ services: services as IServices, config });
+      await dualCommunicator.init();
+
+      const result = await dualCommunicator.fetchMessagesFromBothSystems('channel_1');
+
+      expect(result.pubnubSuccess).to.be.true;
+      expect(result.chatServiceSuccess).to.be.true;
+    });
+
+    it('should handle pubnub fetch failure with rejected promise', async () => {
+      pubnubCommunicatorStub.fetchAllMessages.rejects(new Error('Network error'));
+      chatServiceCommunicatorStub.fetchAllMessages.resolves({ success: true, value: [] });
+
+      const dualCommunicator = new DualRealtimeCommunicator({ services: services as IServices, config });
+      await dualCommunicator.init();
+
+      const result = await dualCommunicator.fetchMessagesFromBothSystems('channel_1', {});
+
+      expect(result.pubnubSuccess).to.be.false;
+      expect(result.chatServiceSuccess).to.be.true;
+    });
+
+    it('should handle chatService fetch failure with rejected promise', async () => {
+      pubnubCommunicatorStub.fetchAllMessages.resolves({ success: true, value: [] });
+      chatServiceCommunicatorStub.fetchAllMessages.rejects(new Error('Network error'));
+
+      const dualCommunicator = new DualRealtimeCommunicator({ services: services as IServices, config });
+      await dualCommunicator.init();
+
+      const result = await dualCommunicator.fetchMessagesFromBothSystems('channel_1', {});
+
+      expect(result.pubnubSuccess).to.be.true;
+      expect(result.chatServiceSuccess).to.be.false;
+    });
+
+    it('should handle pubnub fetch failure with success false', async () => {
+      pubnubCommunicatorStub.fetchAllMessages.resolves({ success: false, status: 'error' });
+      chatServiceCommunicatorStub.fetchAllMessages.resolves({ success: true, value: [] });
+
+      const dualCommunicator = new DualRealtimeCommunicator({ services: services as IServices, config });
+      await dualCommunicator.init();
+
+      const result = await dualCommunicator.fetchMessagesFromBothSystems('channel_1', {});
+
+      expect(result.pubnubSuccess).to.be.false;
+      expect(result.chatServiceSuccess).to.be.true;
+    });
+
+    it('should handle chatService fetch failure with success false', async () => {
+      pubnubCommunicatorStub.fetchAllMessages.resolves({ success: true, value: [] });
+      chatServiceCommunicatorStub.fetchAllMessages.resolves({ success: false, status: 'error' });
+
+      const dualCommunicator = new DualRealtimeCommunicator({ services: services as IServices, config });
+      await dualCommunicator.init();
+
+      const result = await dualCommunicator.fetchMessagesFromBothSystems('channel_1', {});
+
+      expect(result.pubnubSuccess).to.be.true;
+      expect(result.chatServiceSuccess).to.be.false;
+    });
+
+    it('should handle pubnub result with falsy value.value', async () => {
+      pubnubCommunicatorStub.fetchAllMessages.resolves({ success: true, value: null });
+      chatServiceCommunicatorStub.fetchAllMessages.resolves({ success: true, value: [] });
+
+      const dualCommunicator = new DualRealtimeCommunicator({ services: services as IServices, config });
+      await dualCommunicator.init();
+
+      const result = await dualCommunicator.fetchMessagesFromBothSystems('channel_1', {});
+
+      expect(result.pubnubSuccess).to.be.true;
+      expect(result.chatServiceSuccess).to.be.true;
+      expect(result.pubnubMessages).to.deep.equal([]);
+    });
+
+    it('should handle chatService result with falsy value.value', async () => {
+      pubnubCommunicatorStub.fetchAllMessages.resolves({ success: true, value: [] });
+      chatServiceCommunicatorStub.fetchAllMessages.resolves({ success: true, value: undefined });
+
+      const dualCommunicator = new DualRealtimeCommunicator({ services: services as IServices, config });
+      await dualCommunicator.init();
+
+      const result = await dualCommunicator.fetchMessagesFromBothSystems('channel_1', {});
+
+      expect(result.pubnubSuccess).to.be.true;
+      expect(result.chatServiceSuccess).to.be.true;
+      expect(result.chatServiceMessages).to.deep.equal([]);
+    });
   });
 });
