@@ -89,8 +89,6 @@ class ComparisonScheduler {
     this.logger.info('Starting Comparison Scheduler');
     this.isRunning = true;
 
-    await this.teamDiscoveryService!.refreshTeams();
-
     this.teamDiscoveryInterval = setInterval(
       () => this._runTeamDiscovery(),
       this.schedulerConfig.teamDiscoveryIntervalMinutes * 60 * 1000,
@@ -127,24 +125,40 @@ class ComparisonScheduler {
     this.logger.info('Comparison Scheduler stopped');
   }
 
-  public async runManualComparison(teamIds?: string[]): Promise<unknown[]> {
-    let teams = this.teamDiscoveryService!.getCachedTeams();
+  public async runManualComparison(teamIds?: string[], channelIds?: string[]): Promise<unknown[]> {
+    const timeWindow = this.messageFetcherService!.calculateTimeWindow(
+      this.schedulerConfig.pollingIntervalMinutes,
+      5,
+    );
+
+    if (channelIds && channelIds.length > 0) {
+      this.logger.info('Running manual comparison for specified channels', { channelIds, channelCount: channelIds.length });
+      const comparisonResults: unknown[] = [];
+
+      for (const channelId of channelIds) {
+        const fetchResult = await this.messageFetcherService!.fetchMessagesByChannelId(channelId, timeWindow);
+        const comparisonResult = await this._compareTeam(fetchResult);
+        if (comparisonResult) {
+          comparisonResults.push(comparisonResult);
+        }
+      }
+
+      return comparisonResults;
+    }
+
+    let teams: Array<{ teamId: string; channelId: string }>;
 
     if (teamIds && teamIds.length > 0) {
-      teams = teams.filter((team) => teamIds.includes(team.teamId));
+      teams = await this.teamDiscoveryService!.getTeamsByIds(teamIds);
       this.logger.info('Running manual comparison for specified teams', { teamIds, teamCount: teams.length });
     } else {
+      teams = this.teamDiscoveryService!.getCachedTeams();
       this.logger.info('Running manual comparison for all cached teams', { teamCount: teams.length });
     }
 
     if (teams.length === 0) {
       throw new Error('No teams found for manual comparison');
     }
-
-    const timeWindow = this.messageFetcherService!.calculateTimeWindow(
-      this.schedulerConfig.pollingIntervalMinutes,
-      5,
-    );
 
     const fetchResults = await this.messageFetcherService!.fetchMessagesForTeams(teams, timeWindow);
     const comparisonResults: unknown[] = [];
@@ -195,16 +209,7 @@ class ComparisonScheduler {
   }
 
   private async _runTeamDiscovery(): Promise<void> {
-    try {
-      this.logger.info('Running scheduled team discovery');
-      await this.teamDiscoveryService!.refreshTeams();
-    } catch (error) {
-      this.logger.error('Scheduled team discovery failed', {
-        error: (error as Error).message,
-        stack: (error as Error).stack,
-      });
-      this.alerts.counter('chat_comparison.scheduled_team_discovery_failures', {});
-    }
+    this.logger.info('Scheduled team discovery - teams are refreshed automatically when needed via getTeamsByIds');
   }
 
   private async _runComparison(): Promise<void> {

@@ -21,8 +21,8 @@ export interface IRealtimeCommunicationsService {
 }
 
 export interface ITeamDiscoveryService {
-  refreshTeams: () => Promise<void>;
   getCachedTeams: () => Array<{ teamId: string; channelId: string }>;
+  getTeamsByIds: (teamIds: string[]) => Promise<Array<{ teamId: string; channelId: string }>>;
 }
 
 export interface IMessageFetcherService {
@@ -30,6 +30,10 @@ export interface IMessageFetcherService {
     teams: Array<{ teamId: string; channelId: string }>,
     timeWindow: { fromTimestamp: number; toTimestamp: number }
   ) => Promise<unknown[]>;
+  fetchMessagesByChannelId: (
+    channelId: string,
+    timeWindow: { fromTimestamp: number; toTimestamp: number }
+  ) => Promise<unknown>;
   calculateTimeWindow: (
     pollingIntervalMinutes: number,
     bufferMinutes: number
@@ -46,5 +50,5 @@ export interface IMetricsEmitter {
 }
 
 export interface IComparisonScheduler {
-  runManualComparison: (teamIds?: string[]) => Promise<unknown[]>;
+  runManualComparison: (teamIds?: string[], channelIds?: string[]) => Promise<unknown[]>;
 }

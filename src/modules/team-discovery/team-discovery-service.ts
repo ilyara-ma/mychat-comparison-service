@@ -50,7 +50,7 @@ class TeamDiscoveryService {
 
     this.teamScanner = new TeamScanner(this.logger, this.teamsDAL);
 
-    await this.refreshTeams();
+    await this._refreshTeams();
 
     this.logger.info('Team Discovery Service initialized successfully');
   }
@@ -72,7 +72,7 @@ class TeamDiscoveryService {
     }
   }
 
-  public async refreshTeams(): Promise<void> {
+  private async _refreshTeams(): Promise<void> {
     try {
       this.logger.info('Refreshing teams');
       const teams = await this._discoverTeams();
@@ -92,6 +92,27 @@ class TeamDiscoveryService {
     return this.teamCache.getTeams();
   }
 
+  public async getTeamsByIds(teamIds: string[]): Promise<Team[]> {
+    const cachedTeams = this.teamCache.getTeams();
+    const cachedTeamIds = new Set(cachedTeams.map((team) => team.teamId));
+    const missingTeamIds = teamIds.filter((teamId) => !cachedTeamIds.has(teamId));
+
+    if (missingTeamIds.length === 0) {
+      return cachedTeams.filter((team) => teamIds.includes(team.teamId));
+    }
+
+    this.logger.info('Fetching missing teams from DAL', {
+      missingCount: missingTeamIds.length,
+      requestedCount: teamIds.length,
+    });
+
+    const fetchedTeams = await this.teamScanner!.getTeamsByIds(missingTeamIds);
+    const allTeams = [...cachedTeams, ...fetchedTeams];
+    this.teamCache.setTeams(allTeams);
+
+    return allTeams.filter((team) => teamIds.includes(team.teamId));
+  }
+
   private async _discoverTeams(): Promise<Team[]> {
     const manualTeamIds = await this._getManualTeamIds();
 
@@ -100,7 +121,8 @@ class TeamDiscoveryService {
       return this.teamScanner!.getTeamsByIds(manualTeamIds);
     }
 
-    return this.teamScanner!.scanTeams();
+    this.logger.warn('No manual team IDs configured - returning empty team list');
+    return [];
   }
 
   private async _getManualTeamIds(): Promise<string[]> {

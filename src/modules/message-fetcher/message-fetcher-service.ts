@@ -109,6 +109,63 @@ class MessageFetcherService {
     }
   }
 
+  public async fetchMessagesByChannelId(channelId: string, timeWindow: TimeWindow): Promise<FetchResult> {
+    const { fromTimestamp, toTimestamp } = timeWindow;
+    const teamId = channelId;
+
+    try {
+      this.logger.info('Fetching messages for channel', {
+        channelId,
+        fromTimestamp,
+        toTimestamp,
+      });
+
+      const result = await this.dualRealtimeCommunicator!.fetchMessagesFromBothSystems(
+        channelId,
+        {
+          includeMessageActions: true,
+          fromTimestamp,
+          toTimestamp,
+        },
+      );
+
+      this.alerts.counter('chat_comparison.message_fetches', {
+        teamId,
+        pubnubSuccess: result.pubnubSuccess ? 'true' : 'false',
+        chatServiceSuccess: result.chatServiceSuccess ? 'true' : 'false',
+      });
+
+      return {
+        teamId,
+        channelId,
+        pubnubMessages: result.pubnubMessages as unknown[],
+        chatServiceMessages: result.chatServiceMessages as unknown[],
+        pubnubSuccess: result.pubnubSuccess,
+        chatServiceSuccess: result.chatServiceSuccess,
+        fetchTimestamp: Date.now(),
+      };
+    } catch (error) {
+      this.logger.error('Failed to fetch messages for channel', {
+        channelId,
+        error: (error as Error).message,
+        stack: (error as Error).stack,
+      });
+
+      this.alerts.counter('chat_comparison.fetch_errors', { teamId });
+
+      return {
+        teamId,
+        channelId,
+        pubnubMessages: [],
+        chatServiceMessages: [],
+        pubnubSuccess: false,
+        chatServiceSuccess: false,
+        fetchTimestamp: Date.now(),
+        error: (error as Error).message,
+      };
+    }
+  }
+
   public async fetchMessagesForTeams(teams: Team[], timeWindow: TimeWindow): Promise<FetchResult[]> {
     const processFn = (team: Team) => this.fetchMessages(team, timeWindow);
 
