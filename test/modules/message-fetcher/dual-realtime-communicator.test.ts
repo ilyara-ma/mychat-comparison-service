@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import proxyquire from 'proxyquire';
-import { IServices } from '../../src/types';
+import { IServices } from '../../../src/types';
 
 describe('DualRealtimeCommunicator', () => {
-  let DualRealtimeCommunicator: typeof import('../../src/services/dual-realtime-communicator').default;
+  let DualRealtimeCommunicator: typeof import('../../../src/modules/message-fetcher/dual-realtime-communicator').default;
   let realtimeCommunicationsServiceStub: sinon.SinonStub;
   let pubnubCommunicatorStub: {
     init: sinon.SinonStub;
@@ -36,7 +36,7 @@ describe('DualRealtimeCommunicator', () => {
     realtimeCommunicationsServiceStub.onFirstCall().returns(pubnubCommunicatorStub);
     realtimeCommunicationsServiceStub.onSecondCall().returns(chatServiceCommunicatorStub);
 
-    DualRealtimeCommunicator = proxyquire('../../src/services/dual-realtime-communicator', {
+    DualRealtimeCommunicator = proxyquire('../../../src/modules/message-fetcher/dual-realtime-communicator', {
       '@moonactive/moonactive-realtime-communications': realtimeCommunicationsServiceStub,
     }).default;
 

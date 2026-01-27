@@ -27,20 +27,6 @@
         "operationId": "runComparison",
         "parameters": [
           {
-            "name": "teamIds",
-            "in": "query",
-            "description": "Comma-separated list of team IDs or array of team IDs",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "channelIds",
-            "in": "query",
-            "description": "Comma-separated list of channel IDs or array of channel IDs. If provided, team discovery is skipped and messages are fetched directly for these channels.",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "body",
             "in": "body",
             "description": "Request body with optional team IDs and/or channel IDs",

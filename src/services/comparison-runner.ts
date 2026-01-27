@@ -1,5 +1,6 @@
 import ComparisonEngine from '../modules/comparison-engine/comparison-engine';
 import { ComparisonResult } from '../modules/comparison-engine/types';
+import DualRealtimeCommunicator from '../modules/message-fetcher/dual-realtime-communicator';
 import MetricsEmitter from '../modules/metrics-alerting/metrics-emitter';
 import TeamDiscoveryService from '../modules/team-discovery/team-discovery-service';
 import {
@@ -7,10 +8,9 @@ import {
 } from '../types';
 import ChannelIdBuilder from '../utils/channel-id-builder';
 import { calculateTimeWindow } from '../utils/time-window';
-import DualRealtimeCommunicator from './dual-realtime-communicator';
-import { IComparisonScheduler } from './types';
+import { IComparisonRunner } from './types';
 
-class ComparisonScheduler implements IComparisonScheduler {
+class ComparisonRunner implements IComparisonRunner {
   private config: Record<string, unknown>;
 
   private logger: ILogger;
@@ -36,7 +36,7 @@ class ComparisonScheduler implements IComparisonScheduler {
   constructor(params: ModuleParams) {
     const { services, config } = params;
     this.config = config || {};
-    this.logger = services.loggerManager.getLogger('comparison-scheduler');
+    this.logger = services.loggerManager.getLogger('comparison-runner');
     this.alerts = services.alerts;
     this.comparisonInterval = null;
     this.isRunning = false;
@@ -79,7 +79,7 @@ class ComparisonScheduler implements IComparisonScheduler {
 
   public async start(): Promise<void> {
     if (this.isRunning) {
-      this.logger.warn('Comparison Scheduler is already running');
+      this.logger.warn('Comparison Runner is already running');
       return;
     }
 
@@ -128,7 +128,7 @@ class ComparisonScheduler implements IComparisonScheduler {
   }
 
   private _loadSchedulerConfig(): void {
-    const cfg = (this.config.comparisonScheduler as Record<string, unknown>) || {};
+    const cfg = (this.config.comparisonRunner as Record<string, unknown>) || {};
 
     this.schedulerConfig = {
       enabled: cfg?.enabled !== false,
@@ -273,4 +273,4 @@ class ComparisonScheduler implements IComparisonScheduler {
   }
 }
 
-export default ComparisonScheduler;
+export default ComparisonRunner;

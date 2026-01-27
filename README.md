@@ -10,9 +10,9 @@ This service enables side-by-side validation of Chat against PubNub during Teams
 
 The service consists of the following modules:
 
-- **Team Discovery**: Discovers and caches teams to monitor
-- **Message Fetcher**: Fetches messages from both PubNub and Chat using RTC package
-- **Message Matcher**: Correlates messages using PubNub timetoken and fuzzy matching
+- **Team Discovery**: Discovers teams to monitor using TeamsDAL
+- **Dual Realtime Communicator**: Fetches messages from both PubNub and Chat Service using RTC package
+- **Message Matcher**: Correlates messages by matching PubNub timetoken with Chat Service message ID (extracted from `message.id`)
 - **Comparison Engine**: Validates message count, content, ordering, coverage, and latency
 - **Metrics & Alerting**: Emits metrics and triggers alerts based on thresholds
 
@@ -21,10 +21,10 @@ The service consists of the following modules:
 ```mermaid
 flowchart TD
     Start([Application Start]) --> Init[Initialize Services]
-    Init --> Scheduler[ComparisonScheduler.init]
-    Scheduler --> StartScheduler{Enabled?}
-    StartScheduler -->|Yes| RefreshTeams[Refresh Teams]
-    StartScheduler -->|No| Stop([Service Running])
+    Init --> Runner[ComparisonRunner.init]
+    Runner --> StartRunner{Enabled?}
+    StartRunner -->|Yes| RefreshTeams[Refresh Teams]
+    StartRunner -->|No| Stop([Service Running])
     
     RefreshTeams --> TeamDiscovery[TeamDiscoveryService.initialize]
     TeamDiscovery --> ScheduleIntervals[Schedule Intervals]
@@ -32,31 +32,29 @@ flowchart TD
     ScheduleIntervals --> ComparisonInterval[Comparison Interval<br/>Every 15 min]
     
     ComparisonInterval --> RunComparison[Run Comparison]
-    RunComparison --> GetTeams[Get Cached Teams]
+    RunComparison --> GetTeams[Get Teams Batch]
     GetTeams --> CalculateWindow[Calculate Time Window]
-    CalculateWindow --> FetchMessages[MessageFetcherService.fetchMessagesForTeams]
+    CalculateWindow --> DualFetch[DualRealtimeCommunicator.fetchMessagesFromBothSystems]
     
-    FetchMessages --> BatchProcess[BatchProcessor.processAllBatches]
-    BatchProcess --> DualFetch[DualRealtimeCommunicator.fetchMessagesFromBothSystems]
     DualFetch --> PubNubFetch[Fetch from PubNub]
-    DualFetch --> ChatFetch[Fetch from Chat]
+    DualFetch --> ChatFetch[Fetch from Chat Service]
     PubNubFetch --> CombineResults[Combine Results]
     ChatFetch --> CombineResults
     
     CombineResults --> Compare[ComparisonEngine.compare]
     Compare --> Match[MessageMatcher.matchMessages]
-    Match --> TimetokenMatch{Timetoken Match?}
+    Match --> TimetokenMatch{Match by<br/>message.id === timetoken?}
     TimetokenMatch -->|Yes| Matched[Matched Messages]
-    TimetokenMatch -->|No| FuzzyMatch[FuzzyMatcher.findMatch]
-    FuzzyMatch --> Matched
+    TimetokenMatch -->|No| Unmatched[Unmatched Messages]
     
     Matched --> ContentCompare[ContentComparator.compareContent]
-    Matched --> OrderingValidate[OrderingValidator.validate]
+    Matched --> OrderingValidate[OrderingValidator.validate<br/>Compare PubNub timetokens<br/>vs Chat offsets]
     Matched --> MetricsCalc[MetricsCalculator.calculateMetrics]
     
     ContentCompare --> Results[Comparison Results]
     OrderingValidate --> Results
     MetricsCalc --> Results
+    Unmatched --> Results
     
     Results --> EmitMetrics[MetricsEmitter.emitComparisonMetrics]
     EmitMetrics --> CheckThresholds[AlertManager.checkThresholds]
@@ -75,11 +73,13 @@ classDiagram
         +start()
     }
     
-    class ComparisonScheduler {
-        -teamDiscoveryService: ITeamDiscoveryService
-        -messageFetcherService: IMessageFetcherService
-        -comparisonEngine: IComparisonEngine
-        -metricsEmitter: IMetricsEmitter
+    class ComparisonRunner {
+        -teamDiscoveryService: TeamDiscoveryService
+        -dualRealtimeCommunicator: DualRealtimeCommunicator
+        -comparisonEngine: ComparisonEngine
+        -metricsEmitter: MetricsEmitter
+        -channelIdBuilder: ChannelIdBuilder
+        +init()
         +start()
         +runManualComparison()
         -_runComparison()
@@ -95,26 +95,14 @@ classDiagram
     
     class ChannelIdBuilder {
         -channelPrefixes: string[]
-        +buildChannelIds(teamId)
-    }
-    
-    class MessageFetcherService {
-        -dualRealtimeCommunicator: IDualRealtimeCommunicator
-        -batchProcessor: BatchProcessor
-        +fetchMessages()
-        +fetchMessagesForTeams()
-        +calculateTimeWindow()
+        +buildChannelIds(teamId): string[]
     }
     
     class DualRealtimeCommunicator {
         -pubnubCommunicator: IRealtimeCommunicationsService
         -chatServiceCommunicator: IRealtimeCommunicationsService
+        +init()
         +fetchMessagesFromBothSystems()
-        +fetchLastMessagesByCount()
-    }
-    
-    class BatchProcessor {
-        +processAllBatches()
     }
     
     class ComparisonEngine {
@@ -127,28 +115,26 @@ classDiagram
     }
     
     class MessageMatcher {
-        -fuzzyMatcher: FuzzyMatcher
         +matchMessages()
-    }
-    
-    class FuzzyMatcher {
-        +findMatch()
+        -_extractMessageIdFromChatMessage()
     }
     
     class ContentComparator {
-        +areEqual()
         +compareContent()
+        -_extractContent()
+        -_findDifferences()
     }
     
     class OrderingValidator {
         +validate()
+        -_extractTimetoken()
+        -_extractOffset()
+        -_compareValues()
     }
     
     class MetricsCalculator {
-        +calculateMessageCountDiscrepancy()
-        +calculateCoverage()
-        +calculateContentMismatchRate()
-        +calculateLatencyDifferences()
+        +calculateMetrics()
+        -_extractTimestamp()
     }
     
     class MetricsEmitter {
@@ -168,36 +154,28 @@ classDiagram
         +logComparisonResult()
     }
     
-    class ComparisonRoute {
-        -comparisonScheduler: IComparisonScheduler
-        -teamDiscoveryService: ITeamDiscoveryService
+    class ComparisonController {
         +runComparison()
     }
     
-    Application --> ComparisonScheduler
-    ComparisonScheduler --> TeamDiscoveryService
-    ComparisonScheduler --> MessageFetcherService
-    ComparisonScheduler --> ComparisonEngine
-    ComparisonScheduler --> MetricsEmitter
+    Application --> ComparisonRunner
+    ComparisonRunner --> TeamDiscoveryService
+    ComparisonRunner --> DualRealtimeCommunicator
+    ComparisonRunner --> ComparisonEngine
+    ComparisonRunner --> MetricsEmitter
+    ComparisonRunner --> ChannelIdBuilder
     
     TeamDiscoveryService --> ITeamsDAL
-    ComparisonScheduler --> ChannelIdBuilder
-    
-    MessageFetcherService --> DualRealtimeCommunicator
-    MessageFetcherService --> BatchProcessor
     
     ComparisonEngine --> MessageMatcher
     ComparisonEngine --> ContentComparator
     ComparisonEngine --> OrderingValidator
     ComparisonEngine --> MetricsCalculator
     
-    MessageMatcher --> FuzzyMatcher
-    
     MetricsEmitter --> AlertManager
     MetricsEmitter --> LoggerFormatter
     
-    ComparisonRoute --> ComparisonScheduler
-    ComparisonRoute --> TeamDiscoveryService
+    ComparisonController --> ComparisonRunner
 ```
 
 ## Key Features
@@ -218,12 +196,10 @@ Triggers an on-demand comparison for specified teams or all cached teams.
 **Request Body (optional):**
 ```json
 {
-  "teamIds": ["team-id-1", "team-id-2"]
+  "teamIds": ["team-id-1", "team-id-2"],
+  "channelIds": ["channel-id-1", "channel-id-2"]
 }
 ```
-
-**Query Parameters (optional):**
-- `teamIds`: Comma-separated string of team IDs (e.g., `?teamIds=team-id-1,team-id-2`) or array
 
 **Response:**
 ```json

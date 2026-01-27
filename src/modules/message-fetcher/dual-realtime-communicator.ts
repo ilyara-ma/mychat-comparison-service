@@ -1,4 +1,4 @@
-import { IAlerts, ILogger, ModuleParams } from '../types';
+import { IAlerts, ILogger, ModuleParams } from '../../types';
 import { IRealtimeCommunicationsService } from './types';
 
 class DualRealtimeCommunicator {

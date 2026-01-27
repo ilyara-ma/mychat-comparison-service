@@ -12,7 +12,7 @@
     "test": "AWS_PROFILE=moonactive-ci nyc mocha 'test/**/*.test.ts' --exit --require ts-node/register --require @moonactive/moonactive-test-reporter --reporter mochawesome",
     "test:integration": "AWS_PROFILE=moonactive-ci mocha 'integration-test/**/*.test.ts' --reporter mochawesome --require ts-node/register --require @moonactive/moonactive-test-reporter --exit --timeout 200000 --retries 2",
     "lint": "node_modules/.bin/eslint . --ext .ts",
-    "all": "npm run build && npm run test  && npm run lint",
+    "all": "npm run build && npm run test  && npm run lint:fix",
     "lint:fix": "node_modules/.bin/eslint . --ext .ts --fix",
     "husky": "husky install || true",
     "prepare": "npm run husky"

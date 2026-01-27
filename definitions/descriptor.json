@@ -38,8 +38,8 @@
       "path": "@moonactive/moonactive-mysql-client"
     },
     {
-      "name": "comparisonScheduler",
-      "path": "./dist/services/comparison-scheduler",
+      "name": "comparisonRunner",
+      "path": "./dist/services/comparison-runner",
       "entryPoint": "default"
     },
     {

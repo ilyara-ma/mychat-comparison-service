@@ -1,13 +1,12 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import TeamDiscoveryService from '../../../src/modules/team-discovery/team-discovery-service';
-import { IAlerts, ILogger, ModuleParams } from '../../../src/types';
+import { ILogger, ModuleParams } from '../../../src/types';
 import { ITeamsDAL } from '../../../src/modules/team-discovery/types';
 
 describe('TeamDiscoveryService', () => {
   let teamDiscoveryService: TeamDiscoveryService;
   let logger: ILogger;
-  let alerts: IAlerts;
   let services: ModuleParams['services'];
   let teamsDAL: ITeamsDAL;
 
@@ -17,12 +16,6 @@ describe('TeamDiscoveryService', () => {
       error: sinon.stub(),
       warn: sinon.stub(),
       debug: sinon.stub(),
-    };
-
-    alerts = {
-      counter: sinon.stub(),
-      gauge: sinon.stub(),
-      histogram: sinon.stub(),
     };
 
     teamsDAL = {
@@ -35,7 +28,6 @@ describe('TeamDiscoveryService', () => {
       loggerManager: {
         getLogger: sinon.stub().returns(logger),
       },
-      alerts,
       featureConfig: {
         client: {} as any,
       },
@@ -58,14 +50,12 @@ describe('TeamDiscoveryService', () => {
     teamDiscoveryService = new TeamDiscoveryService({
       services,
       config: {
-        teamDiscovery: {
-          batchSize: 10,
-        },
+        batchSize: 10,
       },
     });
 
     await teamDiscoveryService.initialize();
-    
+
     Module.prototype.require = originalRequire;
   });
 
@@ -119,7 +109,6 @@ describe('TeamDiscoveryService', () => {
 
       expect(result).to.deep.equal(expectedTeamIds);
       expect((teamsDAL.getTeamsData as sinon.SinonStub).calledWith({ limit: 10 })).to.be.true;
-      expect((alerts.gauge as sinon.SinonStub).calledWith('chat_comparison.discovered_teams_count', {}, 2)).to.be.true;
     });
 
     it('should handle single team result', async () => {
@@ -141,7 +130,6 @@ describe('TeamDiscoveryService', () => {
 
       expect(result).to.deep.equal([]);
       expect((logger.error as sinon.SinonStub).calledOnce).to.be.true;
-      expect((alerts.counter as sinon.SinonStub).calledWith('chat_comparison.team_discovery_failures', {})).to.be.true;
     });
 
     it('should handle err in result and return empty array', async () => {

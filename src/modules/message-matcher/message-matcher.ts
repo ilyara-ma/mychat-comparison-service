@@ -33,7 +33,7 @@ class MessageMatcher {
   }
 
   private _extractMessageIdFromChatMessage(chatMsg: ChatMessage): string | null {
-    return chatMsg.message?.id || chatMsg.id || null;
+    return chatMsg.message?.id || null;
   }
 }
 

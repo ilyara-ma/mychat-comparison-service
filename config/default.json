@@ -120,7 +120,7 @@
       "connectionLimit": 10
     }
   },
-  "comparisonScheduler": {
+  "comparisonRunner": {
     "enabled": false,
     "pollingIntervalMinutes": 15,
     "pollingTimeWindowMinutes": 20,

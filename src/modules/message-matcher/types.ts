@@ -4,29 +4,11 @@ export type PubnubMessage = {
 };
 
 export type ChatMessage = {
-  id?: string;
   message?: {
     id?: string;
-    content?: {
-      metadata?: {
-        messageId?: string;
-        pubnubTimetoken?: string;
-      };
-      messageId?: string;
-      pubnubTimetoken?: string;
-      [key: string]: unknown;
-    };
-  };
-  content?: {
-    metadata?: {
-      messageId?: string;
-      pubnubTimetoken?: string;
-    };
-    messageId?: string;
-    pubnubTimetoken?: string;
     [key: string]: unknown;
   };
-  [key: string]: unknown;
+  actions?: unknown;
 };
 
 export type MessagePair = {

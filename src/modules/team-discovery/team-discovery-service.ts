@@ -1,5 +1,5 @@
 import {
-  IAlerts, ILogger, ModuleParams,
+  ILogger, ModuleParams,
 } from '../../types';
 import { ITeamsDAL } from './types';
 
@@ -12,8 +12,6 @@ class TeamDiscoveryService {
 
   private logger: ILogger;
 
-  private alerts: IAlerts;
-
   private teamsDAL: ITeamsDAL | null;
 
   private batchSize: number;
@@ -25,11 +23,9 @@ class TeamDiscoveryService {
     this.config = config || {};
     this.services = services;
     this.logger = services.loggerManager.getLogger('team-discovery');
-    this.alerts = services.alerts;
     this.teamsDAL = null;
 
-    const teamDiscoveryConfig = (this.config.teamDiscovery as Record<string, unknown>) || {};
-    this.batchSize = (teamDiscoveryConfig.batchSize as number) || 50;
+    this.batchSize = (this.config.batchSize as number) || 50;
   }
 
   public async initialize(): Promise<void> {
@@ -58,14 +54,12 @@ class TeamDiscoveryService {
       const teamsData = Array.isArray(result.value) ? result.value : [result.value];
       const teamIds: string[] = teamsData.map((teamData: Record<string, unknown>) => teamData.teamId as string);
 
-      this.alerts.gauge('chat_comparison.discovered_teams_count', {}, teamIds.length);
       return teamIds;
     } catch (error) {
       this.logger.error('Failed to fetch teams batch', {
         error: (error as Error).message,
         stack: (error as Error).stack,
       });
-      this.alerts.counter('chat_comparison.team_discovery_failures', {});
       return [];
     }
   }

@@ -3,7 +3,7 @@ import sinon from 'sinon';
 
 describe('Integration: Comparison Flow', () => {
   let app: unknown;
-  let comparisonScheduler: unknown;
+  let comparisonRunner: unknown;
 
   before(async () => {
     process.env.NODE_ENV = 'test';

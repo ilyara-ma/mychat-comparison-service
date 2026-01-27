@@ -7,7 +7,7 @@ export interface IServices {
     client: IFeatureConfigClient;
   };
   secretManager?: unknown;
-  comparisonScheduler: unknown;
+  comparisonRunner: unknown;
 }
 
 export interface ILogger {

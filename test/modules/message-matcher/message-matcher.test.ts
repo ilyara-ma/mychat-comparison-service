@@ -18,14 +18,14 @@ describe('MessageMatcher', () => {
 
       const chatServiceMessages: ChatMessage[] = [
         {
-          id: '100',
-          content: {
+          message: {
+            id: '100',
             text: 'hello',
           },
         },
         {
-          id: '200',
-          content: {
+          message: {
+            id: '200',
             text: 'world',
           },
         },
@@ -46,8 +46,8 @@ describe('MessageMatcher', () => {
 
       const chatServiceMessages: ChatMessage[] = [
         {
-          id: '100',
-          content: {
+          message: {
+            id: '100',
             text: 'hello',
           },
         },
@@ -67,13 +67,13 @@ describe('MessageMatcher', () => {
 
       const chatServiceMessages: ChatMessage[] = [
         {
-          id: '100',
-          content: {
+          message: {
+            id: '100',
             text: 'hello',
           },
         },
         {
-          content: {
+          message: {
             text: 'world',
             timestamp: Date.now(),
           },
@@ -93,8 +93,8 @@ describe('MessageMatcher', () => {
 
       const chatServiceMessages: ChatMessage[] = [
         {
-          id: '200',
-          content: {
+          message: {
+            id: '200',
             text: 'hello',
             userId: 'user1',
           },
@@ -117,9 +117,7 @@ describe('MessageMatcher', () => {
         {
           message: {
             id: '100',
-            content: {
-              text: 'hello',
-            },
+            text: 'hello',
           },
         },
       ];
