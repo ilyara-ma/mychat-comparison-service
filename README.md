@@ -187,6 +187,21 @@ classDiagram
 - **Threshold-Based Alerting**: Emits metrics and triggers alerts on discrepancies
 - **On-Demand API**: REST API endpoint for manual comparison runs
 
+## CLI Usage
+
+The tool can be run as a CLI command for manual comparisons (e.g., for Jenkins jobs). This mode does not start the HTTP server.
+
+```bash
+# Run manual comparison for specific teams
+node dist/app.js runManualComparison --teamIds team-id-1,team-id-2
+
+# Run manual comparison for specific channels
+node dist/app.js runManualComparison --channelIds channel-id-1,channel-id-2
+
+# Run manual comparison for both
+node dist/app.js runManualComparison --teamIds team-id-1 --channelIds channel-id-1
+```
+
 ## API Endpoints
 
 ### POST `/api/v1/comparison/run`

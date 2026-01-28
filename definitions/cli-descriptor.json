@@ -1,0 +1,42 @@
+{
+  "machineMetaInfo": {
+    "name": "machineMeta",
+    "path": "@moonactive/moonactive-machine-meta"
+  },
+  "logger": {
+    "name": "loggerManager",
+    "path": "@moonactive/moonactive-logger"
+  },
+  "descriptor": [
+    {
+      "name": "secretManager",
+      "path": "@moonactive/moonactive-secret-manager"
+    },
+    {
+      "name": "alerts",
+      "path": "@moonactive/alerts"
+    },
+    {
+      "name": "featureConfig",
+      "path": "@moonactive/moonactive-feature-config"
+    },
+    {
+      "name": "coreMetrics",
+      "path": "@moonactive/moonactive-core-metrics"
+    },
+    {
+      "name": "contextService",
+      "path": "@moonactive/request-context",
+      "entryPoint": "ContextService"
+    },
+    {
+      "name": "teamsRdsClient",
+      "path": "@moonactive/moonactive-mysql-client"
+    },
+    {
+      "name": "comparisonRunner",
+      "path": "./dist/services/comparison-runner",
+      "entryPoint": "default"
+    }
+  ]
+}
