@@ -43,8 +43,25 @@ class ComparisonEngine {
       return this._createSkippedResult(teamId, channelId, pubnubSuccess, chatServiceSuccess);
     }
 
+    const pubnubCount = pubnubMessages.length;
+    const chatCount = chatServiceMessages.length;
+
+    if (pubnubCount === 0 || chatCount === 0) {
+      if (pubnubCount === 0 && chatCount === 0) {
+        this.logger.info('No activity detected in either system', { teamId, channelId });
+      } else {
+        this.logger.warn('Total discrepancy: one system is empty', {
+          teamId,
+          channelId,
+          pubnubCount,
+          chatCount,
+        });
+      }
+      return this._handleEmptySetComparison(fetchResult);
+    }
+
     const { matched, pubnubOnly, chatServiceOnly } = this.messageMatcher.matchMessages(
-      pubnubMessages as Array<{ timetoken: string;[key: string]: unknown }>,
+      pubnubMessages as Array<{ timetoken: string; [key: string]: unknown }>,
       chatServiceMessages as Array<{ [key: string]: unknown }>,
     );
 
@@ -109,6 +126,40 @@ class ComparisonEngine {
     });
 
     return mismatches;
+  }
+
+  private _handleEmptySetComparison(fetchResult: FetchResult): ComparisonResult {
+    const {
+      teamId, channelId, pubnubMessages, chatServiceMessages,
+    } = fetchResult;
+
+    const metrics = this.metricsCalculator.calculateMetrics(
+      [],
+      pubnubMessages.length,
+      chatServiceMessages.length,
+      0,
+      pubnubMessages.length,
+      chatServiceMessages.length,
+    );
+
+    return {
+      teamId,
+      channelId,
+      timestamp: Date.now(),
+      metrics: {
+        ...metrics,
+        orderingViolations: 0,
+      },
+      details: {
+        totalPubnubMessages: pubnubMessages.length,
+        totalChatServiceMessages: chatServiceMessages.length,
+        matchedCount: 0,
+        contentMismatchCount: 0,
+        orderingViolationCount: 0,
+      },
+      contentMismatches: [],
+      orderingViolations: [],
+    };
   }
 
   private _createSkippedResult(
