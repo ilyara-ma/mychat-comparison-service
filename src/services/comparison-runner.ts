@@ -57,7 +57,7 @@ class ComparisonRunner implements IComparisonRunner {
     this.comparisonEngine = new ComparisonEngine(params);
     this.metricsEmitter = new MetricsEmitter(params);
 
-    const channelPrefixes = (config?.channelPrefixes as string[]) || ['team_'];
+    const channelPrefixes = (config?.channelPrefixes as string[]) || undefined;
     this.channelIdBuilder = new ChannelIdBuilder(channelPrefixes);
   }
 

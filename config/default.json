@@ -127,9 +127,10 @@
     "batchSize": 50,
     "maxMessagesPerFetch": 100,
     "channelPrefixes": [
-      "team_",
-      "lobby_",
-      "chat_"
+      "team_read_write.",
+      "team_readonly.",
+      "team_join_requests.",
+      "team_gift_rewards."
     ],
     "teamDiscovery": {
       "batchSize": 50,

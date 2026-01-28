@@ -3,18 +3,28 @@ import ChannelIdBuilder from '../../src/utils/channel-id-builder';
 
 describe('ChannelIdBuilder', () => {
   describe('constructor', () => {
-    it('should use default prefix when not provided', () => {
+    it('should use default prefixes when not provided', () => {
       const builder = new ChannelIdBuilder();
       const result = builder.buildChannelIds('123');
 
-      expect(result).to.deep.equal(['team_123']);
+      expect(result).to.deep.equal([
+        'team_read_write.123',
+        'team_readonly.123',
+        'team_join_requests.123',
+        'team_gift_rewards.123',
+      ]);
     });
 
-    it('should use default prefix when empty array provided', () => {
+    it('should use default prefixes when empty array provided', () => {
       const builder = new ChannelIdBuilder([]);
       const result = builder.buildChannelIds('123');
 
-      expect(result).to.deep.equal(['team_123']);
+      expect(result).to.deep.equal([
+        'team_read_write.123',
+        'team_readonly.123',
+        'team_join_requests.123',
+        'team_gift_rewards.123',
+      ]);
     });
 
     it('should use provided prefixes', () => {
@@ -26,11 +36,16 @@ describe('ChannelIdBuilder', () => {
   });
 
   describe('buildChannelIds', () => {
-    it('should build single channelId with single prefix', () => {
-      const builder = new ChannelIdBuilder(['team_']);
+    it('should build channels with default prefixes', () => {
+      const builder = new ChannelIdBuilder();
       const result = builder.buildChannelIds('456');
 
-      expect(result).to.deep.equal(['team_456']);
+      expect(result).to.deep.equal([
+        'team_read_write.456',
+        'team_readonly.456',
+        'team_join_requests.456',
+        'team_gift_rewards.456',
+      ]);
     });
 
     it('should build multiple channelIds with multiple prefixes', () => {
@@ -48,10 +63,15 @@ describe('ChannelIdBuilder', () => {
     });
 
     it('should handle empty string teamId', () => {
-      const builder = new ChannelIdBuilder(['team_']);
+      const builder = new ChannelIdBuilder();
       const result = builder.buildChannelIds('');
 
-      expect(result).to.deep.equal(['team_']);
+      expect(result).to.deep.equal([
+        'team_read_write.',
+        'team_readonly.',
+        'team_join_requests.',
+        'team_gift_rewards.',
+      ]);
     });
 
     it('should maintain prefix order', () => {
@@ -63,14 +83,23 @@ describe('ChannelIdBuilder', () => {
   });
 
   describe('extractTeamId', () => {
-    it('should extract teamId from channelId with single prefix', () => {
-      const builder = new ChannelIdBuilder(['team_']);
-      const result = builder.extractTeamId('team_123');
+    it('should extract teamId from channelId with default prefix', () => {
+      const builder = new ChannelIdBuilder();
+      const result = builder.extractTeamId('team_read_write.123');
 
       expect(result).to.equal('123');
     });
 
-    it('should extract teamId from channelId with multiple prefixes', () => {
+    it('should extract teamId from channelId with multiple default prefixes', () => {
+      const builder = new ChannelIdBuilder();
+
+      expect(builder.extractTeamId('team_read_write.456')).to.equal('456');
+      expect(builder.extractTeamId('team_readonly.456')).to.equal('456');
+      expect(builder.extractTeamId('team_join_requests.456')).to.equal('456');
+      expect(builder.extractTeamId('team_gift_rewards.456')).to.equal('456');
+    });
+
+    it('should extract teamId from channelId with custom prefixes', () => {
       const builder = new ChannelIdBuilder(['team_', 'lobby_', 'chat_']);
 
       expect(builder.extractTeamId('team_456')).to.equal('456');
@@ -86,29 +115,29 @@ describe('ChannelIdBuilder', () => {
     });
 
     it('should handle channelId without prefix', () => {
-      const builder = new ChannelIdBuilder(['team_']);
+      const builder = new ChannelIdBuilder();
       const result = builder.extractTeamId('123');
 
       expect(result).to.equal('123');
     });
 
     it('should extract using first matching prefix', () => {
-      const builder = new ChannelIdBuilder(['team_', 't_']);
-      const result = builder.extractTeamId('team_789');
+      const builder = new ChannelIdBuilder(['team_read_write.', 'team_']);
+      const result = builder.extractTeamId('team_read_write.789');
 
       expect(result).to.equal('789');
     });
 
     it('should handle empty teamId after prefix removal', () => {
-      const builder = new ChannelIdBuilder(['team_']);
-      const result = builder.extractTeamId('team_');
+      const builder = new ChannelIdBuilder();
+      const result = builder.extractTeamId('team_read_write.');
 
       expect(result).to.equal('');
     });
 
     it('should handle complex teamIds', () => {
-      const builder = new ChannelIdBuilder(['team_']);
-      const result = builder.extractTeamId('team_abc-123-xyz');
+      const builder = new ChannelIdBuilder();
+      const result = builder.extractTeamId('team_read_write.abc-123-xyz');
 
       expect(result).to.equal('abc-123-xyz');
     });

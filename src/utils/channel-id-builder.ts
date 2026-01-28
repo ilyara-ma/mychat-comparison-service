@@ -4,7 +4,7 @@ class ChannelIdBuilder {
   constructor(channelPrefixes?: string[]) {
     this.channelPrefixes = channelPrefixes && channelPrefixes.length > 0
       ? channelPrefixes
-      : ['team_'];
+      : ['team_read_write.', 'team_readonly.', 'team_join_requests.', 'team_gift_rewards.'];
   }
 
   public buildChannelIds(teamId: string): string[] {
