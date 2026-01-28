@@ -1,0 +1,10 @@
+{
+  "teamIds": [
+    "team-123",
+    "team-456"
+  ],
+  "channelIds": [
+    "channel-abc",
+    "channel-def"
+  ]
+}

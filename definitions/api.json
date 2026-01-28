@@ -11,7 +11,8 @@
     "http"
   ],
   "consumes": [
-    "application/json"
+    "application/json",
+    "multipart/form-data"
   ],
   "produces": [
     "application/json"
@@ -20,7 +21,7 @@
     "/api/v1/comparison/run": {
       "post": {
         "summary": "Run on-demand comparison",
-        "description": "Triggers a comparison between PubNub and Chat Service for specified teams/channels or all cached teams. Either teamIds or channelIds can be provided, or both can be omitted to compare all cached teams.",
+        "description": "Triggers a comparison between PubNub and Chat Service for specified teams/channels or all cached teams. Either teamIds or channelIds can be provided in the JSON body, or both can be omitted to compare all cached teams.",
         "tags": [
           "comparison"
         ],
@@ -41,6 +42,45 @@
             "description": "Comparison completed successfully",
             "schema": {
               "$ref": "#/definitions/ComparisonResponse"
+            }
+          },
+          "500": {
+            "description": "Comparison failed",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/comparison/run-from-file": {
+      "post": {
+        "summary": "Run on-demand comparison from file",
+        "description": "Triggers a comparison between PubNub and Chat Service using team/channel IDs from a JSON file specified by file path. The file must be valid JSON containing teamIds and/or channelIds. Supports object format ({\"teamIds\": [...], \"channelIds\": [...]}) or array format ([\"team1\", \"team2\"] - treated as teamIds).",
+        "tags": [
+          "comparison"
+        ],
+        "operationId": "runComparisonFromFile",
+        "parameters": [
+          {
+            "name": "filePath",
+            "in": "query",
+            "description": "File path to JSON file on server (relative to working directory or absolute path). Example: \"examples/teams.json\"",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Comparison completed successfully",
+            "schema": {
+              "$ref": "#/definitions/ComparisonResponse"
+            }
+          },
+          "400": {
+            "description": "Invalid request or file format",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
             }
           },
           "500": {
