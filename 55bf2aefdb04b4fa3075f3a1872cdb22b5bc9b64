@@ -1,0 +1,36 @@
+examples/teams-and-channels.json
+  6706d52 1-10
+test/controllers/index.test.ts
+  6706d52 1-480
+test/utils/file-parser.test.ts
+  6706d52 1-139
+src/utils/file-parser.ts
+  6706d52 1-43
+src/controllers/index.ts
+  human 2,72-73
+  6706d52 6,8,15-20,27-30,59-71,74-97,99-105,107-111,130-131
+  ac24289 106
+definitions/api.json
+  0888882 14
+  6706d52 15,24,55-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.22",
+  "base_commit_sha": "55bf2aefdb04b4fa3075f3a1872cdb22b5bc9b64",
+  "prompts": {
+    "6706d52": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "b7d23fe0-2a87-4ca3-a2b3-3a1e54c12730",
+        "model": "unknown"
+      },
+      "human_author": "ilyara-ma <ilya.ra@moonactive.com>",
+      "messages": [],
+      "total_additions": 1780,
+      "total_deletions": 927,
+      "accepted_lines": 839,
+      "overriden_lines": 2
+    }
+  }
+}
