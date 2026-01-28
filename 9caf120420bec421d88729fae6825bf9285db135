@@ -1,0 +1,54 @@
+test/utils/channel-id-builder.test.ts
+  f71ffaa 6,10-15,18,22-27,39,44-47,71-73,86,93-102,125-126
+  ac24289 40,43,48,66,69-70,74,87-88,118,132-133,139-140
+config/default.json
+  ac24289 130-131,133
+  f71ffaa 132
+src/services/comparison-runner.ts
+  f71ffaa 60
+src/utils/channel-id-builder.ts
+  f71ffaa 7
+examples/teams-and-channels.json
+  6706d52 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.22",
+  "base_commit_sha": "9caf120420bec421d88729fae6825bf9285db135",
+  "prompts": {
+    "f71ffaa": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "31547593-5fb6-46df-86ea-a9faf7bc20db",
+        "model": "composer-1"
+      },
+      "human_author": "ilyara-ma <ilya.ra@moonactive.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "use those prefixes for channel builder :   static getTeamChannel(teamId) {\n    return `team_read_write.${teamId}`;\n  }\n\n  static getTeamReadOnlyChannel(teamId) {\n    return `team_readonly.${teamId}`;\n  }\n\n  static getJoinRequestsChannel(teamId) {\n    return `team_join_requests.${teamId}`;\n  }\n\n  static getHelpReceivedChannel(playerId, teamId) {\n    return `team_help.${playerId}.${teamId}`;\n  }\n\n  static getFriendRequestsChannel(playerId) {\n    return `team_friend_requests.${playerId}`;\n  }\n\n  static getGiftRewardsChannel(teamId) {\n    return `team_gift_rewards.${teamId}`;\n  }",
+          "timestamp": "2026-01-28T09:52:17.741Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Reviewing the current channel builder implementation, then updating it with the provided prefixes.",
+          "timestamp": "2026-01-28T09:52:20.292Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Checking how ChannelIdBuilder is used in the codebase:",
+          "timestamp": "2026-01-28T09:52:22.013Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Refactoring ChannelIdBuilder to use the provided static methods. Updating the implementation and tests:",
+          "timestamp": "2026-01-28T09:52:25.679Z"
+        }
+      ],
+      "total_additions": 224,
+      "total_deletions": 194,
+      "accepted_lines": 89,
+      "overriden_lines": 0
+    }
+  }
+}
